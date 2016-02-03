@@ -18,7 +18,7 @@ public class Individu extends Agent {
 	//Agent init
 	protected void setup() {
 		// Printout a welcome message
-		System.out.println("Hello! Buyer-agent"+ getAID().getName()+ " is ready.");
+		System.out.println("Hello! Individu-agent"+ getAID().getName()+ " is ready.");
 	   	
 		//Get title of book to buy as start-up argument
 		Object[] args = getArguments();
@@ -36,6 +36,6 @@ public class Individu extends Agent {
 	//Agent clean-up
 	protected void takeDown(){
 		//Dismissal message
-		System.out.println("Buyer-agent " + getAID().getName() + " terminating.");
+		System.out.println("Individu-agent " + getAID().getName() + " terminating.");
 	}
 }
