@@ -13,8 +13,9 @@ public class TestJadeEnvoiObjetSerializable {
 		HashMap<Emploi, Integer> emploisNombre = new HashMap<Emploi,Integer>();
 		emploisNombre.put(emploi1, 3);
 		System.out.println(emploisNombre.get(emploi1));
-		emploisNombre.put(emploi2, 61);
-		System.out.println(emploisNombre.get(emploi1));
+		/*emploisNombre.put(emploi2, 61);
+		System.out.println(emploisNombre.get(emploi1));*/
+		System.out.println(emploisNombre.containsKey(emploi2));
 
 	}
 }
