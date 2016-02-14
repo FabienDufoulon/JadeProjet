@@ -1,0 +1,113 @@
+package core;
+
+import jade.core.Profile;
+import jade.core.ProfileImpl;
+import jade.core.Runtime;
+import jade.wrapper.AgentContainer;
+import jade.wrapper.AgentController;
+import jade.wrapper.StaleProxyException;
+
+/** Simulateur qui crée les agents et gèrent les sorties et entrées des agents.
+ * Un tour est équivalent à un mois.
+ * Chaque année, des individus sortent de la simulation, et des individus rentrent dans la simulation.
+ * 
+ * */
+public class Simulateur {
+	/** Nombre d'individus au début de la simulation. */
+	private int individusDebut;
+	/** Nombre d'individus entrants dans la simulation chaque année. */
+	private int individusEntrants;
+	/** Nombre d'individus sortants de la simulation chaque année. */
+	private int individusSortants;
+	/** ID du dernier individu (pour que les individus aient des noms différents) */
+	private int dernierID;
+	
+	//Paramètres individus
+	/** Temps Libre Minimum Moyen des individus */
+	private int tempsLibreMoyen;
+	/** Revenu Minimum Moyen des individus */
+	private int revenuMoyen;
+	/** Paramètres individus */
+	private int x;
+	private int y;
+	private int z;
+	/** Niveau de qualification moyen des individus */
+	private int niveauQualif;
+	Object[] parametresIndividu;
+	
+	//Paramètres Etat
+	/** Nombre d'emplois par niveau de qualif */
+	int[] emploisParQualif;
+	/** Revenu des emplois de Etat par niveau de qualif */
+	int[] revenusParQualif;
+	/** Temps libre moyen des emplois de Etat par niveau de qualif */
+	int[] tempsLibreParQualif;
+	/** Arguments à donner à l'agent Etat */
+	Object[] parametresEtat;
+	
+	public Simulateur(){
+		//Paramètres simulateur
+		individusDebut = 3;
+		individusEntrants = 1;
+		individusSortants = 1;
+		dernierID = 1;
+		
+		//Individus
+		tempsLibreMoyen = 5;
+		revenuMoyen = 10;
+		x = 2;
+		y = 2;
+		z = 2;
+		niveauQualif = 2;
+		
+		parametresIndividu = new Object[6];
+		parametresIndividu[0] = x;
+		parametresIndividu[1] = y;
+		parametresIndividu[2] = z;
+		/*parametresIndividu[3] = niveauQualif;
+		parametresIndividu[4] = tempsLibreMoyen;
+		parametresIndividu[5] = revenuMoyen;*/
+		
+		
+		//Etat
+		emploisParQualif = new int[]{2,3,1};
+		revenusParQualif = new int[]{8,10,12};
+		tempsLibreParQualif = new int[]{5,4,3};
+		
+		parametresEtat = new Object[9];
+		for (int i = 0; i < 3; i++){
+			parametresEtat[i] = emploisParQualif[i];
+			parametresEtat[3+i] = revenusParQualif[i];
+			parametresEtat[6+i] = tempsLibreParQualif[i];
+		}
+	}
+	
+	public void commenceSimulation() throws StaleProxyException{
+		/*Creation du Runtime*/
+		Runtime rt = Runtime.instance();
+		rt.setCloseVM(true);
+		
+		/*Lancement de la plate-forme*/
+		Profile pMain = new ProfileImpl("localhost", 8888, null);
+		AgentContainer mc = rt.createMainContainer(pMain);
+		
+		/*Lancement des agents */
+		for (int i = 1; i <= individusDebut; i++){
+			//Faire les lois normales ici
+			parametresIndividu[3] = niveauQualif;
+			parametresIndividu[4] = tempsLibreMoyen;
+			parametresIndividu[5] = revenuMoyen;
+			
+			mc.createNewAgent("Individu" + i, Individu.class.getName(), parametresIndividu).start();
+			dernierID++;
+		}
+		
+		mc.createNewAgent("Etat", Etat.class.getName(), parametresEtat).start();
+		AgentController test = mc.createNewAgent("PoleEmploi", PoleEmploi.class.getName(), null);
+
+
+		test.start();
+		/*Ces deux dernières méthodes peuvent lancer l'exception*/
+	}
+
+}
