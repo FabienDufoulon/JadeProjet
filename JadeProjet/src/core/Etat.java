@@ -83,9 +83,6 @@ public class Etat extends Agent {
 				if (content.equals("Turn")){
 					System.out.println("Etat starting turn");
 				}
-				else if (content.equals("Year")){
-					System.out.println("Etat Year");
-				}
 			}
 			else {
 				block();

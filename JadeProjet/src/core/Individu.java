@@ -59,6 +59,12 @@ public class Individu extends Agent {
 			tempsLibreMin = (int) args[4];
 			revenuMin = (int) args[5];
 			
+			//Register Service : service depends on niveauQualif
+			ServiceDescription sd  = new ServiceDescription();
+	        sd.setType( "nivQualif" + nivQualif );
+	        sd.setName( getLocalName() );
+	        Util.register( this,sd );
+			
 			
 			//Ajout des comportements.
 			addBehaviour(new AttenteHorloge());
@@ -76,8 +82,17 @@ public class Individu extends Agent {
 	
 	//Agent clean-up
 	protected void takeDown(){
+		//Deregister from DF
+		try { DFService.deregister(this); }
+        catch (Exception e) {}
+		
 		//Dismissal message
 		System.out.println("Individu-agent " + getAID().getName() + " terminating.");
+	}
+	
+	private void retire(){
+		takeDown();
+		//Demission de l'emploi.
 	}
 	
 	private class AttenteHorloge extends CyclicBehaviour {
@@ -87,10 +102,11 @@ public class Individu extends Agent {
 			if (msg != null) {
 				String content = msg.getContent();
 				if (content.equals("Turn")){
-					System.out.println("Individu starting turn");
+					System.out.println("Individu starting turn : " + getLocalName());
 				}
 				else if (content.equals("Year")){
-					System.out.println("Individu Year");
+					System.out.println("Individu Year : " + getLocalName());
+					//Gerer deregister registre mais aussi demission de emploi.
 				}
 			}
 			else {

@@ -51,9 +51,6 @@ public class PoleEmploi extends Agent {
 				if (content.equals("Turn")){
 					System.out.println("PoleEmploi starting turn");
 				}
-				else if (content.equals("Year")){
-					System.out.println("PoleEmploi Year");
-				}
 			}
 			else {
 				block();

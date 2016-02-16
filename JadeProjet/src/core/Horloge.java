@@ -8,6 +8,7 @@ import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
+import jade.wrapper.ContainerController;
 
 import java.util.HashMap;
 import java.util.function.IntSupplier;
@@ -51,13 +52,13 @@ public class Horloge extends Agent {
 			//Comportement : chaque mois
 			addBehaviour( new TickerBehaviour(this,tempsTour){
 				protected void onTick() {
-					System.out.println("Un tour est passé.");
+					//System.out.println("Un tour est passé.");
 					
 					//Sending message
 					ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
-					inform.addReceiver(new AID("Etat", AID.ISLOCALNAME));
-					inform.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
+					inform = Util.createBroadcastMessage(myAgent, inform);
 					inform.setContent("Turn");
+					
 					myAgent.send(inform);
 				}
 			});
@@ -65,14 +66,23 @@ public class Horloge extends Agent {
 			//Comportement : chaque an (ou si on veut être sûr de la séquence, mettre un compteur au dessus et l'envoi conditionnel)
 			addBehaviour( new TickerBehaviour(this,3*tempsTour){
 				protected void onTick() {
-					System.out.println("Les individus tournent.");
+					//System.out.println("Les individus tournent.");
 					
 					//Sending message
 					ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
-					inform.addReceiver(new AID("Etat", AID.ISLOCALNAME));
-					inform.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
+					inform.addReceiver(Util.getRandomService(myAgent, "nivQualif2"));
 					inform.setContent("Year");
 					myAgent.send(inform);
+					
+					//Créer un nouveau individu
+					try {
+						ContainerController container = getContainerController(); // get a container controller for creating new agents
+						container.createNewAgent("Individu"+dernierID, "examples.thanksAgent.ThanksAgent", null).start();
+						dernierID++;
+					} catch (Exception any) {
+						any.printStackTrace();
+					}
+					
 				}
 			});
 		}
