@@ -2,6 +2,7 @@ package core;
 
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
@@ -48,7 +49,7 @@ public class Individu extends Agent {
 	   	
 		//Get title of book to buy as start-up argument
 		Object[] args = getArguments();
-		if(args != null && args.length > 6){
+		if(args != null && args.length >= 6){
 			x = (int) args[0];
 			y = (int) args[1];
 			z = (int) args[2];
@@ -60,6 +61,7 @@ public class Individu extends Agent {
 			
 			
 			//Ajout des comportements.
+			addBehaviour(new AttenteHorloge());
 			
 		}
 		else{
@@ -68,7 +70,7 @@ public class Individu extends Agent {
 			doDelete(); 
 		}
 		
-		Emploi emploiCourant = null;
+		emploiCourant = null;
 		statut = StatutIndividu.Chomage;
 	}
 	
@@ -76,5 +78,24 @@ public class Individu extends Agent {
 	protected void takeDown(){
 		//Dismissal message
 		System.out.println("Individu-agent " + getAID().getName() + " terminating.");
+	}
+	
+	private class AttenteHorloge extends CyclicBehaviour {
+		public void action() {
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+			ACLMessage msg = myAgent.receive(mt);
+			if (msg != null) {
+				String content = msg.getContent();
+				if (content.equals("Turn")){
+					System.out.println("Individu starting turn");
+				}
+				else if (content.equals("Year")){
+					System.out.println("Individu Year");
+				}
+			}
+			else {
+				block();
+			}
+		}
 	}
 }

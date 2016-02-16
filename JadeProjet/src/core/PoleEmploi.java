@@ -1,6 +1,9 @@
 package core;
 
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
 import java.util.HashMap;
 
@@ -30,11 +33,31 @@ public class PoleEmploi extends Agent {
 		emploisEnvoyes = new HashMap<AID, Emploi>();
 		
 		//Ajout des comportements
+		addBehaviour(new AttenteHorloge());
 	}
 	
 	//Agent clean-up
 	protected void takeDown(){
 		//Dismissal message
 		System.out.println("PoleEmploi-agent " + getAID().getName() + " terminating.");
+	}
+	
+	private class AttenteHorloge extends CyclicBehaviour {
+		public void action() {
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+			ACLMessage msg = myAgent.receive(mt);
+			if (msg != null) {
+				String content = msg.getContent();
+				if (content.equals("Turn")){
+					System.out.println("PoleEmploi starting turn");
+				}
+				else if (content.equals("Year")){
+					System.out.println("PoleEmploi Year");
+				}
+			}
+			else {
+				block();
+			}
+		}
 	}
 }

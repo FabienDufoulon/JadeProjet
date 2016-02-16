@@ -19,8 +19,9 @@ public class Simulateur {
 	private int individusEntrants;
 	/** Nombre d'individus sortants de la simulation chaque année. */
 	private int individusSortants;
-	/** ID du dernier individu (pour que les individus aient des noms différents) */
-	private int dernierID;
+	/** Temps que prend un tour dans la simulation */
+	private int tempsTour;
+	Object[] parametresHorloge;
 	
 	//Paramètres individus
 	/** Temps Libre Minimum Moyen des individus */
@@ -50,7 +51,12 @@ public class Simulateur {
 		individusDebut = 3;
 		individusEntrants = 1;
 		individusSortants = 1;
-		dernierID = 1;
+		tempsTour = 10000;
+		parametresHorloge = new Object[4];
+		parametresHorloge[0] = tempsTour;
+		parametresHorloge[1] = individusEntrants;
+		parametresHorloge[2] = individusSortants;
+		parametresHorloge[3] = 1 + individusDebut;
 		
 		//Individus
 		tempsLibreMoyen = 5;
@@ -99,11 +105,11 @@ public class Simulateur {
 			parametresIndividu[5] = revenuMoyen;
 			
 			mc.createNewAgent("Individu" + i, Individu.class.getName(), parametresIndividu).start();
-			dernierID++;
 		}
 		
 		mc.createNewAgent("Etat", Etat.class.getName(), parametresEtat).start();
-		AgentController test = mc.createNewAgent("PoleEmploi", PoleEmploi.class.getName(), null);
+		mc.createNewAgent("PoleEmploi", PoleEmploi.class.getName(), null).start();
+		AgentController test = mc.createNewAgent("Horloge", Horloge.class.getName(), parametresHorloge);
 
 
 		test.start();
