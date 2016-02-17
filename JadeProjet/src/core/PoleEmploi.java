@@ -14,6 +14,7 @@ import jade.core.AID;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 
 public class PoleEmploi extends Agent {
@@ -38,6 +39,19 @@ public class PoleEmploi extends Agent {
 		statutIndividus = new HashMap<AID, StatutEmploye>();
 		statutEmplois = new HashMap<Emploi, StatutEmploi>();
 		emploisEnvoyes = new HashMap<AID, Emploi>();
+		
+		//Subscribing
+		DFAgentDescription dfd = new DFAgentDescription();
+		ServiceDescription sd = new ServiceDescription();
+		SearchConstraints sc = new SearchConstraints();
+		sc.setMaxResults(new Long(1));
+		
+		for ( int i = 1; i <= 3; i++ ) {
+			sd.setType("nivQualif" + i);
+			dfd.addServices(sd);
+			send(DFService.createSubscriptionMessage(this, getDefaultDF(), dfd, sc));
+			dfd.removeServices(sd);
+		}
 		
 		//Ajout des comportements
 		addBehaviour(new AttenteMessage());
@@ -84,15 +98,8 @@ public class PoleEmploi extends Agent {
 						DFAgentDescription[] dfds;
 						try {
 							dfds = DFService.decodeNotification(msg.getContent());
-							if (dfds.length > 0){
-								Iterator dfservice = dfds[0].getAllServices();
-								while (dfservice.hasNext()){
-									ServiceDescription sd = (ServiceDescription) dfservice.next();
-									if (sd.getType().startsWith("nivQualif")){
-										statutIndividus.put(dfds[0].getName(), StatutEmploye.Chomage);
-									}
-								}
-				            }
+							if (dfds.length > 0)
+								statutIndividus.put(dfds[0].getName(), StatutEmploye.Chomage);
 						} catch (FIPAException e) {
 							e.printStackTrace();
 						}
