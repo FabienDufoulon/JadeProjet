@@ -1,10 +1,13 @@
 package core;
 
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.IntSupplier;
@@ -60,6 +63,7 @@ public class Etat extends Agent {
 			
 			//Ajout des comportements
 			addBehaviour( new AttenteHorloge());
+			addBehaviour( new PublierEmplois());
 		}
 		else{
 			//Kill agent if he does not receive enough arguments
@@ -83,10 +87,49 @@ public class Etat extends Agent {
 				if (content.equals("Turn")){
 					System.out.println("Etat starting turn");
 				}
+				else if (content.startsWith("Demission:")){
+					TraiteReponseDemission(msg);
+				}
+				else if (content.startsWith("Rempli:")){
+					TraiteReponseEmploi(msg);
+				}
 			}
 			else {
 				block();
 			}
 		}
+	}
+	
+	private class PublierEmplois extends OneShotBehaviour {
+		public void action() {
+			if(emploisLibres.size() == 0) return;
+			//Sending message
+			ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+			inform.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
+			for(int i = 0; i < emploisLibres.size(); i++){
+				inform.setConversationId("PublierEmplois");
+				try {
+					inform.setContentObject(emploisLibres.get(i));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				myAgent.send(inform);
+			}
+			emploisLibres.clear();
+		}
+	}
+	
+	private void TraiteReponseEmploi(ACLMessage rempli) {
+		String [] content = rempli.getContent().split(":");
+		emplois.get(Integer.parseInt(content[1])).setEmploye(rempli.getSender());
+	}
+	
+	private void TraiteReponseDemission(ACLMessage demission) {
+		String [] content = demission.getContent().split(":");
+		Emploi emploiDemission = emplois.get(Integer.parseInt(content[1]));
+		emploiDemission.setEmploye(null);
+		emploisLibres.add(emploiDemission);
+		
+		addBehaviour( new PublierEmplois());
 	}
 }
