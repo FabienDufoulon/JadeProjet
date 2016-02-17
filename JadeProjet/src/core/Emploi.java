@@ -33,5 +33,29 @@ public class Emploi implements Serializable{
 		employe = _employe;
 	}
 	
+	public AID getEmploye(){
+		return employe;
+	}
+	
+	public AID getEmployeur(){
+		return employeur;
+	}
+	
+	public int getNiveauQualificationNecessaire(){
+		return niveauQualifNecessaire;
+	}
+	
+	public int getTempsLibre(){
+		return tempsLibre.getAsInt();
+	}
+	
+	public int getRevenu(){
+		return revenu.getAsInt();
+	}
+	
+	public int getRefEmploi(){
+		return refEmploi;
+	}
+	
 
 }

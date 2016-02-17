@@ -38,6 +38,11 @@ public class Individu extends Agent {
 	/** Revenu minimum personnel */
 	private int revenuMin;
 	
+	/** Compte le nombre d'offres consécutives en dessous du revenu minimum personnel*/
+	int compteOffresConsecutives;
+	/** Compte le nombre de mois avec temps libre insuffisant consécutifs. */
+	int compteMoisTLInsuffisant;
+	
 	/** Etat(actif ou chomage) */
 	StatutIndividu statut;
 	/** Instance d'emploi pour obtenir le revenu et le temps libre à chaque tour. */
@@ -47,6 +52,9 @@ public class Individu extends Agent {
 	protected void setup() {
 		// Printout a welcome message
 		System.out.println("Hello! Individu-agent"+ getAID().getName()+ " is ready.");
+		
+		compteOffresConsecutives = 0;
+		compteMoisTLInsuffisant = 0;
 	   	
 		//Get title of book to buy as start-up argument
 		Object[] args = getArguments();
@@ -92,12 +100,31 @@ public class Individu extends Agent {
 	}
 	
 	private void retire(){
+		faireDemission();
 		takeDown();
 		//Demission de l'emploi.
 	}
 	
-	private void envoyerMessageDemission(){
-		
+	private void faireDemission(){
+		if (emploiCourant != null){
+			AID employeur = emploiCourant.getEmployeur();
+			
+			//Créer message
+			ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+			inform.addReceiver(employeur);
+			inform.setContent("Demission:" + emploiCourant.getRefEmploi());
+			send(inform);
+			
+			//Changer ses infos
+			emploiCourant = null;
+			statut = StatutIndividu.Chomage;
+			
+			//DF : enregistrer avec le niveau de qualification
+			ServiceDescription sd  = new ServiceDescription();
+	        sd.setType( "nivQualif" + nivQualif );
+	        sd.setName( getLocalName() );
+	        Util.register( this,sd );
+		}
 	}
 	
 	private class AttenteMessage extends CyclicBehaviour {
@@ -108,14 +135,12 @@ public class Individu extends Agent {
 				
 				String content = msg.getContent();
 				if (content.equals("Turn")){
-					//System.out.println("Individu starting turn : " + getLocalName());
 					if (statut == StatutIndividu.Employe){
 						addBehaviour(new VieActive());
 					}
 				}
 				
 				else if (content.equals("Retraite")){
-					//System.out.println("Individu Retiring : " + getLocalName());
 					//Gerer deregister registre mais aussi demission de emploi.
 					retire();
 				}
@@ -137,9 +162,18 @@ public class Individu extends Agent {
 	
 	private class VieActive extends OneShotBehaviour {
 
-		@Override
 		public void action() {
-			// TODO Auto-generated method stub
+			if (emploiCourant == null) System.out.println("Gros problème ! Employé sans emploi correct.");
+			else{
+				int tempsLibreTour = emploiCourant.getTempsLibre();
+				if (tempsLibreTour >= tempsLibreMin) compteMoisTLInsuffisant = 0;
+				else{
+					compteMoisTLInsuffisant++;
+					if (compteMoisTLInsuffisant > x){
+						faireDemission();
+					}
+				}
+			}
 			
 		}
 		
