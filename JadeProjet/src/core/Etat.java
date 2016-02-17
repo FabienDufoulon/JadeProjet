@@ -30,7 +30,7 @@ public class Etat extends Agent {
 	int derniereReferenceEmploi;
 
 	
-	//Agent init
+	/** Agent init */
 	protected void setup() {
 		// Welcome message
 		System.out.println("Hello! Etat-agent"+ getAID().getName()+ " is ready.");
@@ -72,12 +72,13 @@ public class Etat extends Agent {
 		}
 	}
 	
-	//Agent clean-up
+	/** Agent clean-up */
 	protected void takeDown(){
 		//Dismissal message
 		System.out.println("Etat-agent " + getAID().getName() + " terminating.");
 	}
 	
+	/** Comportement pour lire les messages de performatif INFORM. */
 	private class AttenteMessage extends CyclicBehaviour {
 		public void action() {
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
@@ -103,6 +104,7 @@ public class Etat extends Agent {
 		}
 	}
 	
+	/** Gère la transmission des emplois libres(non donnés à PoleEmploi) à PoleEmploi*/
 	private class PublierEmplois extends OneShotBehaviour {
 		public void action() {
 			if(emploisLibres.size() == 0) return;
@@ -122,11 +124,17 @@ public class Etat extends Agent {
 		}
 	}
 	
+	/** Appelé quand AttenteMessage obtient un message d'acceptation d'un emploi.
+	 *  Utilise la référence contenue dans le message pour mettre à jour 
+	 *  l'individu dans l'emploi correspondant. */
 	private void TraiteReponseEmploi(ACLMessage rempli) {
 		String [] content = rempli.getContent().split(":");
 		emplois.get(Integer.parseInt(content[1])).setEmploye(rempli.getSender());
 	}
 	
+	/** Appelé quand AttenteMessage obtient un message de démission d'un emploi.
+	 *  Utilise la référence contenue dans le message pour mettre à null 
+	 *  l'individu dans l'emploi correspondant et publie "directement" l'emploi libéré. */
 	private void TraiteReponseDemission(ACLMessage demission) {
 		String [] content = demission.getContent().split(":");
 		Emploi emploiDemission = emplois.get(Integer.parseInt(content[1]));
