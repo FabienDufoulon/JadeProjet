@@ -62,7 +62,7 @@ public class Etat extends Agent {
 			
 			
 			//Ajout des comportements
-			addBehaviour( new AttenteHorloge());
+			addBehaviour( new AttenteMessage());
 			addBehaviour( new PublierEmplois());
 		}
 		else{
@@ -78,18 +78,21 @@ public class Etat extends Agent {
 		System.out.println("Etat-agent " + getAID().getName() + " terminating.");
 	}
 	
-	private class AttenteHorloge extends CyclicBehaviour {
+	private class AttenteMessage extends CyclicBehaviour {
 		public void action() {
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
+				
 				String content = msg.getContent();
 				if (content.equals("Turn")){
 					System.out.println("Etat starting turn");
 				}
+				
 				else if (content.startsWith("Demission:")){
 					TraiteReponseDemission(msg);
 				}
+				
 				else if (content.startsWith("Rempli:")){
 					TraiteReponseEmploi(msg);
 				}

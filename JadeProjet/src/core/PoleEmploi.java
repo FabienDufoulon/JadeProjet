@@ -33,7 +33,7 @@ public class PoleEmploi extends Agent {
 		emploisEnvoyes = new HashMap<AID, Emploi>();
 		
 		//Ajout des comportements
-		addBehaviour(new AttenteHorloge());
+		addBehaviour(new AttenteMessage());
 	}
 	
 	//Agent clean-up
@@ -42,7 +42,7 @@ public class PoleEmploi extends Agent {
 		System.out.println("PoleEmploi-agent " + getAID().getName() + " terminating.");
 	}
 	
-	private class AttenteHorloge extends CyclicBehaviour {
+	private class AttenteMessage extends CyclicBehaviour {
 		public void action() {
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
 			ACLMessage msg = myAgent.receive(mt);

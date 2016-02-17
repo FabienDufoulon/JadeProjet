@@ -3,6 +3,7 @@ package core;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
@@ -67,7 +68,7 @@ public class Individu extends Agent {
 			
 			
 			//Ajout des comportements.
-			addBehaviour(new AttenteHorloge());
+			addBehaviour(new AttenteMessage());
 			
 		}
 		else{
@@ -99,24 +100,48 @@ public class Individu extends Agent {
 		
 	}
 	
-	private class AttenteHorloge extends CyclicBehaviour {
+	private class AttenteMessage extends CyclicBehaviour {
 		public void action() {
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
+				
 				String content = msg.getContent();
 				if (content.equals("Turn")){
-					System.out.println("Individu starting turn : " + getLocalName());
+					//System.out.println("Individu starting turn : " + getLocalName());
+					if (statut == StatutIndividu.Employe){
+						addBehaviour(new VieActive());
+					}
 				}
+				
 				else if (content.equals("Retraite")){
 					//System.out.println("Individu Retiring : " + getLocalName());
 					//Gerer deregister registre mais aussi demission de emploi.
 					retire();
+				}
+				
+				else if (msg.getConversationId().equals("PropositionEmploi")){
+					if (statut == StatutIndividu.Chomage){
+						
+					}
+					else{
+						//renvoyer un refus (histoire de ne pas deadlocker le message
+					}
 				}
 			}
 			else {
 				block();
 			}
 		}
+	}
+	
+	private class VieActive extends OneShotBehaviour {
+
+		@Override
+		public void action() {
+			// TODO Auto-generated method stub
+			
+		}
+		
 	}
 }
