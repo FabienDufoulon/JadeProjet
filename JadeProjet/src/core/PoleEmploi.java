@@ -6,6 +6,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -53,49 +54,77 @@ public class PoleEmploi extends Agent {
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
-				String content = msg.getContent();
-				if (content.equals("Turn")){
-					System.out.println("PoleEmploi starting turn");
-				}
-				else if (content.startsWith("EmploiAccepte")){
-					
-				}
-				else if (content.startsWith("EmploiRefuse")){
-					
-				}
-				else if (msg.getConversationId().equals("PublierEmplois")){
+				
+				if (msg.getConversationId().equals("PublierEmplois")){
 					try {
 						statutEmplois.put((Emploi)msg.getContentObject(), StatutEmploi.Disponible);
+						proposerEmploi((Emploi)msg.getContentObject());
 					} catch (UnreadableException e) {
 						e.printStackTrace();
 					}
 				}
+				
 				else {
-					DFAgentDescription[] dfds;
-					try {
-						dfds = DFService.decodeNotification(msg.getContent());
-						if (dfds.length > 0){
-							Iterator dfservice = dfds[0].getAllServices();
-							while (dfservice.hasNext()){
-								ServiceDescription sd = (ServiceDescription) dfservice.next();
-								if (sd.getType().startsWith("nivQualif")){
-									if (statutIndividus.containsKey(dfds[0].getName())){
-										statutIndividus.replace(dfds[0].getName(), StatutEmploye.Employe, StatutEmploye.Chomage);
-									}
-									else {
+					String content = msg.getContent();
+					if (content.equals("Turn")){
+						System.out.println("PoleEmploi starting turn");
+					}
+					else if (content.startsWith("EmploiAccepte")){
+						statutIndividus.put(msg.getSender(), StatutEmploye.Employe);
+						statutEmplois.remove(emploisEnvoyes.get(msg.getSender()), StatutEmploi.Attente);
+						emploisEnvoyes.remove(msg.getSender());
+					}
+					else if (content.startsWith("EmploiRefuse")){
+						Emploi emploiRepropose = emploisEnvoyes.get(msg.getSender());
+						statutEmplois.put(emploiRepropose, StatutEmploi.Disponible);
+						proposerEmploi(emploiRepropose);
+						emploisEnvoyes.remove(msg.getSender());
+					}
+					else {
+						DFAgentDescription[] dfds;
+						try {
+							dfds = DFService.decodeNotification(msg.getContent());
+							if (dfds.length > 0){
+								Iterator dfservice = dfds[0].getAllServices();
+								while (dfservice.hasNext()){
+									ServiceDescription sd = (ServiceDescription) dfservice.next();
+									if (sd.getType().startsWith("nivQualif")){
 										statutIndividus.put(dfds[0].getName(), StatutEmploye.Chomage);
 									}
 								}
-							}
-			            }
-					} catch (FIPAException e) {
-						e.printStackTrace();
+				            }
+						} catch (FIPAException e) {
+							e.printStackTrace();
+						}
 					}
 				}
+				
 			}
 			else {
 				block();
 			}
 		}
+	}
+	
+	private void proposerEmploi(Emploi emploi) {
+		//Si tous les individus ont déjà reçu une proposition d'emploi?
+		
+		//Créer message
+		ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+		AID individuDestine = null;
+		do {
+			individuDestine = Util.getRandomService(this, "nivQualif"+emploi.getNiveauQualificationNecessaire());
+		} while (emploisEnvoyes.containsKey(individuDestine));
+		inform.addReceiver(individuDestine);
+		try {
+			inform.setContentObject(emploi);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		send(inform);
+		
+		//Changer ses infos
+		statutEmplois.put(emploi, StatutEmploi.Attente);
+		emploisEnvoyes.put(individuDestine, emploi);
 	}
 }
