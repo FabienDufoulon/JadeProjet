@@ -48,11 +48,11 @@ public class Simulateur {
 	
 	public Simulateur(){
 		//Paramètres simulateur
-		individusDebut = 3;
-		individusEntrants = 1;
-		individusSortants = 1;
-		tempsTour = 10000;
-		parametresHorloge = new Object[4];
+		individusDebut = 5;
+		individusEntrants = 2;
+		individusSortants = 2;
+		tempsTour = 5000;
+		parametresHorloge = new Object[5];
 		parametresHorloge[0] = tempsTour;
 		parametresHorloge[1] = individusEntrants;
 		parametresHorloge[2] = individusSortants;
@@ -106,6 +106,8 @@ public class Simulateur {
 			
 			mc.createNewAgent("Individu" + i, Individu.class.getName(), parametresIndividu).start();
 		}
+		
+		parametresHorloge[4] = parametresIndividu;
 		
 		mc.createNewAgent("Etat", Etat.class.getName(), parametresEtat).start();
 		mc.createNewAgent("PoleEmploi", PoleEmploi.class.getName(), null).start();

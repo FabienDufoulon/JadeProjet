@@ -11,7 +11,7 @@ import jade.core.AID;
 
 public class PoleEmploi extends Agent {
 	/** Statut des employes. Surtout utile à des fins statistiques. */
-	private enum StatutEmploye {Actif, Chomage};
+	private enum StatutEmploye {Employe, Chomage};
 	/** Statut des emplois. Pour savoir s'il faut s'occuper de cet emploi ou non. */
 	private enum StatutEmploi {Attente, Disponible};
 

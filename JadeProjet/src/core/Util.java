@@ -1,5 +1,8 @@
 package core;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import jade.core.AID;
@@ -20,6 +23,7 @@ import jade.lang.acl.ACLMessage;
 public class Util {
 	static Random rand = new Random(); 
 	
+	/** Improved register function. Allows to register if the agent forgot to deregister previously.*/
 	static void register(Agent agent, ServiceDescription sd)
     {
         DFAgentDescription dfd = new DFAgentDescription();
@@ -53,7 +57,7 @@ public class Util {
         return null;
     }
     
-	/** Return only one AID found, corresponding to service*/
+	/** Return only one AID found randomly, corresponding to service*/
     static AID getRandomService(Agent agent, String service )
     {
         DFAgentDescription dfd = new DFAgentDescription();
@@ -95,20 +99,51 @@ public class Util {
         return null;
     }
     
+    /** Return all individu instances registered on the DF*/
+    static AID[] getAllIndividus(Agent agent){
+		AID[] individusEmployes = Util.searchDF(agent,"employe");
+		AID[] individusNiv1 = Util.searchDF(agent,"nivQualif1");
+    	AID[] individusNiv2 = Util.searchDF(agent,"nivQualif2");
+		AID[] individusNiv3 = Util.searchDF(agent,"nivQualif3");
+		
+		ArrayList<AID> allIndividusList = new ArrayList<AID>();
+		allIndividusList.addAll(Arrays.asList(individusEmployes));
+		allIndividusList.addAll(Arrays.asList(individusNiv1));
+		allIndividusList.addAll(Arrays.asList(individusNiv2));
+		allIndividusList.addAll(Arrays.asList(individusNiv3));
+		AID[] allIndividus = allIndividusList.toArray(new AID[
+		                             individusEmployes.length + individusNiv1.length +
+		                             individusNiv2.length + individusNiv3.length]);
+		
+		return allIndividus;
+    }
+    
+	/** Return numerous AID found randomly(contiguous), corresponding to service*/
+    static AID[] getMultipleRandomIndividu(Agent agent, int nombre )
+    {	
+		AID[] allIndividus = getAllIndividus(agent);
+
+    	AID[] agents = new AID[nombre];
+        if (allIndividus.length > nombre && nombre > 0){
+            int randomStartIndex = rand.nextInt(allIndividus.length-nombre);
+            for (int i = 0; i < nombre; i++) agents[i] = allIndividus[randomStartIndex+i];
+        }
+        else if(allIndividus.length == nombre){
+        	return allIndividus;
+        }
+        return agents;
+        
+    }
+    
+    /** Ajoute tous les individus, Etat et PoleEmploi à receiver. */
     static ACLMessage createBroadcastMessage(Agent agent, ACLMessage message){
     	//Ajouter Etat et Pole Emploi
     	message.addReceiver(new AID("Etat", AID.ISLOCALNAME));
     	message.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
 
-    	//Ajouter tous les individus(enregistrés sous actif, nivQualif1, nivQualif2 ou nivQualif3)
-		AID[] individusActifs = Util.searchDF(agent,"actif");
-		for(int i = 0; i < individusActifs.length; i++) message.addReceiver(individusActifs[i]);
-		AID[] individusNiv1 = Util.searchDF(agent,"nivQualif1");
-		for(int i = 0; i < individusNiv1.length; i++) message.addReceiver(individusNiv1[i]);
-    	AID[] individusNiv2 = Util.searchDF(agent,"nivQualif2");
-		for(int i = 0; i < individusNiv2.length; i++) message.addReceiver(individusNiv2[i]);
-		AID[] individusNiv3 = Util.searchDF(agent,"nivQualif3");
-		for(int i = 0; i < individusNiv3.length; i++) message.addReceiver(individusNiv3[i]);
+    	//Ajouter tous les individus(enregistrés sous employe, nivQualif1, nivQualif2 ou nivQualif3)
+		AID[] allIndividus = Util.getAllIndividus(agent);
+		for(int i = 0; i < allIndividus.length; i++) message.addReceiver(allIndividus[i]);
 		
 		return message;
     }

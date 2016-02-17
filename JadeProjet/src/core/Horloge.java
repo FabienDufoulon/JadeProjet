@@ -32,6 +32,8 @@ public class Horloge extends Agent {
 	private int nombreSortants;
 	/** Dernier numéro attribué(ainsi tous les individus ont un nom simple) */
 	private int dernierID;	
+	/** Attributs nécessaires lors de la création d'un individu. */
+	private Object[] parametresIndividus;
 
 
 	
@@ -42,11 +44,12 @@ public class Horloge extends Agent {
 		
 		//Crée l'horloge selon les arguments en entrée
 		Object[] args = getArguments();
-		if(args != null && args.length >= 4){
+		if(args != null && args.length >= 5){
 			tempsTour = (int) args[0];
 			nombreEntrants = (int) args[1];
 			nombreSortants = (int) args[2];
 			dernierID = (int) args[3];
+			parametresIndividus = (Object[]) args[4];
 			
 			//Ajout des comportements
 			//Comportement : chaque mois
@@ -64,23 +67,30 @@ public class Horloge extends Agent {
 			});
 			
 			//Comportement : chaque an (ou si on veut être sûr de la séquence, mettre un compteur au dessus et l'envoi conditionnel)
-			addBehaviour( new TickerBehaviour(this,3*tempsTour){
+			addBehaviour( new TickerBehaviour(this,2*tempsTour){
 				protected void onTick() {
-					//System.out.println("Les individus tournent.");
 					
-					//Sending message
-					ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
-					inform.addReceiver(Util.getRandomService(myAgent, "nivQualif2"));
-					inform.setContent("Year");
-					myAgent.send(inform);
+					//Tuer le bon nombre d'individus, en envoyant en message "Retraite"
+					AID[] agentsRetraite = Util.getMultipleRandomIndividu(myAgent, nombreSortants);
+					System.out.println(agentsRetraite[0]);
+					for (int i = 0; i < agentsRetraite.length; i++){
+						ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+						inform.addReceiver(agentsRetraite[i]);
+						inform.setContent("Retraite");
+						myAgent.send(inform);
+					}
 					
-					//Créer un nouveau individu
-					try {
-						ContainerController container = getContainerController(); // get a container controller for creating new agents
-						container.createNewAgent("Individu"+dernierID, "examples.thanksAgent.ThanksAgent", null).start();
-						dernierID++;
-					} catch (Exception any) {
-						any.printStackTrace();
+
+					
+					//Créer le bon nombre de nouveaux individus
+					for (int i = 0; i < nombreEntrants; i++){
+						try {
+							ContainerController container = getContainerController(); // get a container controller for creating new agents
+							container.createNewAgent("Individu"+dernierID, Individu.class.getName(), parametresIndividus).start();
+							dernierID++;
+						} catch (Exception any) {
+							any.printStackTrace();
+						}
 					}
 					
 				}

@@ -21,7 +21,7 @@ import jade.core.AID;
  */
 public class Individu extends Agent {
 	/** Statut des individus. Permet d'avoir un comportement à état. */
-	private enum StatutIndividu {Actif, Chomage};
+	private enum StatutIndividu {Employe, Chomage};
 	
 	//Paramètres donnés en entrée à la création de l'agent.
 	/** Nombre de mois avec temps libre insuffisant avant qu'il démissionne. */
@@ -95,6 +95,10 @@ public class Individu extends Agent {
 		//Demission de l'emploi.
 	}
 	
+	private void envoyerMessageDemission(){
+		
+	}
+	
 	private class AttenteHorloge extends CyclicBehaviour {
 		public void action() {
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
@@ -104,9 +108,10 @@ public class Individu extends Agent {
 				if (content.equals("Turn")){
 					System.out.println("Individu starting turn : " + getLocalName());
 				}
-				else if (content.equals("Year")){
-					System.out.println("Individu Year : " + getLocalName());
+				else if (content.equals("Retraite")){
+					//System.out.println("Individu Retiring : " + getLocalName());
 					//Gerer deregister registre mais aussi demission de emploi.
+					retire();
 				}
 			}
 			else {
