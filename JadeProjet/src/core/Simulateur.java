@@ -88,6 +88,8 @@ public class Simulateur {
 		}
 	}
 	
+	/** Méthode à appeller une seule fois par test. Crée tous les agents initiaux, le reste est 
+	 *  géré par Horloge. */
 	public void commenceSimulation() throws StaleProxyException{
 		/*Creation du Runtime*/
 		Runtime rt = Runtime.instance();

@@ -37,7 +37,7 @@ public class Horloge extends Agent {
 
 
 	
-	//Agent init
+	/** Agent init */
 	protected void setup() {
 		// Printout a welcome message
 		System.out.println("Hello! Horloge-agent"+ getAID().getName()+ " is ready.");
@@ -54,23 +54,23 @@ public class Horloge extends Agent {
 			//Ajout des comportements
 			//Comportement : chaque mois
 			addBehaviour( new TickerBehaviour(this,tempsTour){
-				protected void onTick() {
-					//System.out.println("Un tour est passé.");
-					
-					//Sending message
+				protected void onTick() {					
+					//Sending message : broadcast à tous les agents de la simulation pour qu'ils savent
+					//que c'est le début d'un tour.
 					ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
 					inform = Util.createBroadcastMessage(myAgent, inform);
 					inform.setContent("Turn");
-					
 					myAgent.send(inform);
+					
 				}
 			});
 			
 			//Comportement : chaque an (ou si on veut être sûr de la séquence, mettre un compteur au dessus et l'envoi conditionnel)
+			//Ces individus disposent d'ID continus, seul le premier est choisi aléatoirement.
 			addBehaviour( new TickerBehaviour(this,2*tempsTour){
 				protected void onTick() {
 					
-					//Tuer le bon nombre d'individus, en envoyant en message "Retraite"
+					//Tuer le bon nombre d'individus, en envoyant un message "Retraite"
 					AID[] agentsRetraite = Util.getMultipleRandomIndividu(myAgent, nombreSortants);
 					System.out.println(agentsRetraite[0]);
 					for (int i = 0; i < agentsRetraite.length; i++){
@@ -104,7 +104,7 @@ public class Horloge extends Agent {
 		
 	}
 	
-	//Agent clean-up
+	/** Agent clean-up */
 	protected void takeDown(){
 		//Dismissal message
 		System.out.println("PoleEmploi-agent " + getAID().getName() + " terminating.");
