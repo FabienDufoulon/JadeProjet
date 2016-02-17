@@ -11,6 +11,7 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
 import jade.core.AID;
 
 /**
@@ -48,7 +49,7 @@ public class Individu extends Agent {
 	/** Instance d'emploi pour obtenir le revenu et le temps libre à chaque tour. */
 	Emploi emploiCourant;
 	
-	//Agent init
+	/** Agent init */
 	protected void setup() {
 		// Printout a welcome message
 		System.out.println("Hello! Individu-agent"+ getAID().getName()+ " is ready.");
@@ -89,7 +90,7 @@ public class Individu extends Agent {
 		statut = StatutIndividu.Chomage;
 	}
 	
-	//Agent clean-up
+	/** Agent clean-up */
 	protected void takeDown(){
 		//Deregister from DF
 		try { DFService.deregister(this); }
@@ -99,12 +100,15 @@ public class Individu extends Agent {
 		System.out.println("Individu-agent " + getAID().getName() + " terminating.");
 	}
 	
+	/** Fonction qui enlève proprement un agent. Démission pour sa liaison avec les autres objets,
+	 *  Takedown pour lui-même.*/
 	private void retire(){
 		faireDemission();
 		takeDown();
 		//Demission de l'emploi.
 	}
 	
+	/** Fonction pour faire tous les détails liés à la démission. */
 	private void faireDemission(){
 		if (emploiCourant != null){
 			AID employeur = emploiCourant.getEmployeur();
@@ -119,6 +123,10 @@ public class Individu extends Agent {
 			emploiCourant = null;
 			statut = StatutIndividu.Chomage;
 			
+			//Deregister from DF
+			try { DFService.deregister(this); }
+	        catch (Exception e) {}
+			
 			//DF : enregistrer avec le niveau de qualification
 			ServiceDescription sd  = new ServiceDescription();
 	        sd.setType( "nivQualif" + nivQualif );
@@ -127,30 +135,39 @@ public class Individu extends Agent {
 		}
 	}
 	
+	/** Comportement qui consiste à la lecture de message de performative INFORM.
+	 *  Reçoit entre autre les messages horloge qui l'informe du début du tour. */
 	private class AttenteMessage extends CyclicBehaviour {
 		public void action() {
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
 				
-				String content = msg.getContent();
-				if (content.equals("Turn")){
-					if (statut == StatutIndividu.Employe){
-						addBehaviour(new VieActive());
-					}
-				}
-				
-				else if (content.equals("Retraite")){
-					//Gerer deregister registre mais aussi demission de emploi.
-					retire();
-				}
-				
-				else if (msg.getConversationId().equals("PropositionEmploi")){
+				//On vérifie si le message n'est pas une proposition d'emploi d'abord
+				//Dans ce cas le contenu est un objet.
+				if (msg.getConversationId().equals("ProposeEmploi")){
 					if (statut == StatutIndividu.Chomage){
-						
+						etudierEmploi(msg);
 					}
 					else{
 						//renvoyer un refus (histoire de ne pas deadlocker le message
+						envoyerRefusEmploi();
+					}
+				}
+				
+				else{
+					//Individu apprend que c'est le début du tour
+					String content = msg.getContent();
+					if (content.equals("Turn")){
+						if (statut == StatutIndividu.Employe){
+							addBehaviour(new VieEmploye());
+						}
+					}
+					
+					//L'individu part à la retraite
+					else if (content.equals("Retraite")){
+						//Gerer deregister registre mais aussi demission de emploi.
+						retire();
 					}
 				}
 			}
@@ -160,7 +177,70 @@ public class Individu extends Agent {
 		}
 	}
 	
-	private class VieActive extends OneShotBehaviour {
+	/** Fonction qui gère le cas quand l'individu reçoit un message de proposition d'emploi,
+	 *  il vérifie alors si cet emploi le satisfait, et si oui répond à PoleEmploi, se met à jour. */
+	private void etudierEmploi(ACLMessage msg){
+		//Lecture de l'instance emploi dans le message.
+		Emploi content = null;
+		try {
+			content = (Emploi) msg.getContentObject();
+		} catch (UnreadableException e) {
+			e.printStackTrace();
+		}
+		
+		if (content != null){
+			//Si le revenu n'est pas suffisant.
+			if (revenuMin > content.getRevenu()){
+				if (compteOffresConsecutives > y){
+					compteOffresConsecutives = 0;
+					if (revenuMin - z < 0 ) revenuMin = 0;
+					else revenuMin -= z;
+				}
+				else{
+					compteOffresConsecutives++;
+				}
+				envoyerRefusEmploi();
+			}
+			
+			
+			//Le revenu est suffisant et on accepte l'emploi.
+			else{
+				//Créer message
+				ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+				inform.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
+				inform.setContent("EmploiAccepte");
+				send(inform);
+				
+				//Deregister from DF
+				try { DFService.deregister(this); }
+		        catch (Exception e) {}
+				
+				//Register to DF : employe
+				ServiceDescription sd  = new ServiceDescription();
+		        sd.setType("employe");
+		        sd.setName( getLocalName() );
+		        Util.register( this,sd );
+		        
+		        //Se mettre à jour
+		        statut = StatutIndividu.Employe;
+		        emploiCourant = content;
+			}
+		}
+
+		
+	}
+	
+	/** Fonction pour envoyer un refus à la proposition d'emploi de Pole Emploi. */
+	private void envoyerRefusEmploi(){
+		//Créer message
+		ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+		inform.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
+		inform.setContent("EmploiRefuse");
+		send(inform);
+	}
+	
+	/** Comportement appelé quand l'individu est employe, il regarde s'il dispose d'assez de temps libre, sinon démission. */
+	private class VieEmploye extends OneShotBehaviour {
 
 		public void action() {
 			if (emploiCourant == null) System.out.println("Gros problème ! Employé sans emploi correct.");
