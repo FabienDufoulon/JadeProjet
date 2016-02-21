@@ -1,6 +1,7 @@
 package core;
 
 import jade.core.Agent;
+
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
@@ -10,6 +11,7 @@ import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -19,6 +21,8 @@ import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+
+import jade.proto.SubscriptionInitiator;
 
 public class PoleEmploi extends Agent {
 	/** Statut des employes. Surtout utile à des fins statistiques. */
@@ -45,20 +49,7 @@ public class PoleEmploi extends Agent {
 		statutIndividus = new HashMap<AID, StatutEmploye>();
 		statutEmplois = new HashMap<Emploi, StatutEmploi>();
 		emploisEnvoyes = new HashMap<AID, Emploi>();
-		
-		//Subscribing
-		DFAgentDescription dfd = new DFAgentDescription();
-		ServiceDescription sd = new ServiceDescription();
-		SearchConstraints sc = new SearchConstraints();
-		sc.setMaxResults(new Long(1));
-		
-		for ( int i = 1; i <= 3; i++ ) {
-			sd.setType("nivQualif" + i);
-			dfd.addServices(sd);
-			send(DFService.createSubscriptionMessage(this, getDefaultDF(), dfd, sc));
-			dfd.removeServices(sd);
-		}
-		
+	
 		//Ajout des comportements
 		addBehaviour(new AttenteMessage());
 	}
@@ -88,12 +79,19 @@ public class PoleEmploi extends Agent {
 				else {
 					String content = msg.getContent();
 					if (content.equals("Turn")){
-						System.out.println("PoleEmploi starting turn");
+						statistiques();
+						//System.out.println("PoleEmploi starting turn");
 					}
 					else if (content.startsWith("EmploiAccepte")){
 						statutIndividus.put(msg.getSender(), StatutEmploye.Employe);
 						statutEmplois.remove(emploisEnvoyes.get(msg.getSender()), StatutEmploi.Attente);
 						emploisEnvoyes.remove(msg.getSender());
+					}
+					else if (content.equals("Inscription")){
+						statutIndividus.put(msg.getSender(), StatutEmploye.Chomage);
+					}
+					else if (content.startsWith("Demission")){
+						statutIndividus.put(msg.getSender(), StatutEmploye.Chomage);
 					}
 					else if (content.equals("EmploiRefuse")){
 						Emploi emploiRepropose = emploisEnvoyes.get(msg.getSender());
@@ -103,16 +101,6 @@ public class PoleEmploi extends Agent {
 					}
 					else if (content.equals("Retraite")){
 						statutIndividus.remove(msg.getSender());
-					}
-					else {
-						DFAgentDescription[] dfds;
-						try {
-							dfds = DFService.decodeNotification(msg.getContent());
-							if (dfds.length > 0)
-								statutIndividus.put(dfds[0].getName(), StatutEmploye.Chomage);
-						} catch (FIPAException e) {
-							e.printStackTrace();
-						}
 					}
 				}
 				
@@ -129,6 +117,7 @@ public class PoleEmploi extends Agent {
 		//Si tous les individus ont déjà reçu une proposition d'emploi?		
 		//Créer message
 		ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+		inform.setConversationId("ProposeEmploi");
 		AID individuDestine = null;
 		
 		individuDestine = Util.getRandomService(this, "nivQualif"+emploi.getNiveauQualificationNecessaire());
@@ -170,5 +159,22 @@ public class PoleEmploi extends Agent {
 			
 		}
 		
+	}
+	
+	
+	private void statistiques(){
+		System.out.println("S");
+		//int count = Collections.frequency(new ArrayList<String>(HM.values()), "Red");
+		int employes = Collections.frequency(statutIndividus.values(), StatutEmploye.Employe);
+		int rechercheEmplois = Collections.frequency(statutIndividus.values(), StatutEmploye.Chomage);
+		int individus = statutIndividus.size();
+		int nombreEmploisNonPourvus = statutEmplois.size();
+		int nombreEmploisEnvoyes = emploisEnvoyes.size();
+		
+		System.out.println(individus + " individus dans le système");
+		System.out.println(employes + " individus employes dans le système");
+		System.out.println(rechercheEmplois + " individus en recherche d'emplois dans le système");
+		System.out.println(nombreEmploisNonPourvus + " nombreEmploisNonPourvus dans le système");
+		System.out.println(nombreEmploisEnvoyes + " nombreEmploisEnvoyes dans le système");
 	}
 }

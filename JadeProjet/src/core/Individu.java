@@ -52,7 +52,7 @@ public class Individu extends Agent {
 	/** Agent init */
 	protected void setup() {
 		// Printout a welcome message
-		System.out.println("Hello! Individu-agent"+ getAID().getName()+ " is ready.");
+		//System.out.println("Hello! Individu-agent"+ getAID().getName()+ " is ready.");
 		
 		compteOffresConsecutives = 0;
 		compteMoisTLInsuffisant = 0;
@@ -74,6 +74,12 @@ public class Individu extends Agent {
 	        sd.setType( "nivQualif" + nivQualif );
 	        sd.setName( getLocalName() );
 	        Util.register( this,sd );
+	        
+			//Créer message Inscription
+			ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+			inform.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
+			inform.setContent("Inscription");
+			send(inform);
 			
 			
 			//Ajout des comportements.
@@ -97,7 +103,7 @@ public class Individu extends Agent {
         catch (Exception e) {}
 		
 		//Dismissal message
-		System.out.println("Individu-agent " + getAID().getName() + " terminating.");
+		//System.out.println("Individu-agent " + getAID().getName() + " terminating.");
 	}
 	
 	/** Fonction qui enlève proprement un agent. Démission pour sa liaison avec les autres objets,
@@ -121,9 +127,10 @@ public class Individu extends Agent {
 		if (emploiCourant != null){
 			AID employeur = emploiCourant.getEmployeur();
 			
-			//Créer message
+			//Créer message Demission pour Employeur et PoleEmploi
 			ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
 			inform.addReceiver(employeur);
+			inform.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
 			inform.setContent("Demission:" + emploiCourant.getRefEmploi());
 			send(inform);
 			
@@ -140,6 +147,7 @@ public class Individu extends Agent {
 	        sd.setType( "nivQualif" + nivQualif );
 	        sd.setName( getLocalName() );
 	        Util.register( this,sd );
+			
 		}
 	}
 	

@@ -49,8 +49,8 @@ public class Simulateur {
 	public Simulateur(){
 		//Paramètres simulateur
 		individusDebut = 5;
-		individusEntrants = 2;
-		individusSortants = 2;
+		individusEntrants = 1;
+		individusSortants = 1;
 		tempsTour = 5000;
 		parametresHorloge = new Object[5];
 		parametresHorloge[0] = tempsTour;
@@ -77,7 +77,7 @@ public class Simulateur {
 		
 		//Etat
 		emploisParQualif = new int[]{2,3,1};
-		revenusParQualif = new int[]{8,10,12};
+		revenusParQualif = new int[]{20,20,20};
 		tempsLibreParQualif = new int[]{5,4,3};
 		
 		parametresEtat = new Object[9];

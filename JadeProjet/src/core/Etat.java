@@ -95,7 +95,7 @@ public class Etat extends Agent {
 					TraiteReponseDemission(msg);
 				}
 				
-				else if (content.startsWith("Rempli:")){
+				else if (content.startsWith("EmploiAccepte:")){
 					TraiteReponseEmploi(msg);
 				}
 			}
