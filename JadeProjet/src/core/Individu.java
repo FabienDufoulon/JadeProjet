@@ -101,11 +101,19 @@ public class Individu extends Agent {
 	}
 	
 	/** Fonction qui enlève proprement un agent. Démission pour sa liaison avec les autres objets,
-	 *  Takedown pour lui-même.*/
+	 *  et envoie d'un message à PoleEmploi, Takedown pour lui-même.
+	 *  */
 	private void retire(){
-		faireDemission();
-		takeDown();
 		//Demission de l'emploi.
+		faireDemission();
+		
+		//Envoyer message retraite à Pole Emploi
+		ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+		inform.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
+		inform.setContent("Retraite");
+		send(inform);
+		
+		takeDown();
 	}
 	
 	/** Fonction pour faire tous les détails liés à la démission. */
@@ -145,7 +153,7 @@ public class Individu extends Agent {
 				
 				//On vérifie si le message n'est pas une proposition d'emploi d'abord
 				//Dans ce cas le contenu est un objet.
-				if (msg.getConversationId().equals("ProposeEmploi")){
+				if (msg.getConversationId() != null && msg.getConversationId().equals("ProposeEmploi")){
 					if (statut == StatutIndividu.Chomage){
 						etudierEmploi(msg);
 					}
@@ -205,10 +213,11 @@ public class Individu extends Agent {
 			
 			//Le revenu est suffisant et on accepte l'emploi.
 			else{
-				//Créer message
+				//Créer même message pour PoleEmploi et Employeur
 				ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+				inform.addReceiver(content.getEmployeur());
 				inform.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
-				inform.setContent("EmploiAccepte");
+				inform.setContent("EmploiAccepte:" + content.getRefEmploi());
 				send(inform);
 				
 				//Deregister from DF

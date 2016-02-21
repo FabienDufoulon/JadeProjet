@@ -8,6 +8,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.IntSupplier;
@@ -49,9 +50,9 @@ public class Etat extends Agent {
 				int tempsLibreMoyen = (int) args[6 + nivQualif-1];
 				
 				for(int i = 0; i < nombreEmplois; i++){
-					IntSupplier _revenu = () -> revenu ;
+					IntSupplier _revenu = (IntSupplier & Serializable)() -> revenu ;
 					//Faire une loi normale ici pour le temps libre
-					IntSupplier _tempsLibre = () -> tempsLibreMoyen ;
+					IntSupplier _tempsLibre = (IntSupplier & Serializable)() -> tempsLibreMoyen ;
 					
 					Emploi temp = new Emploi(getAID(), nivQualif, _tempsLibre, _revenu, derniereReferenceEmploi);
 					emplois.put(derniereReferenceEmploi, temp);
@@ -87,7 +88,7 @@ public class Etat extends Agent {
 				
 				String content = msg.getContent();
 				if (content.equals("Turn")){
-					System.out.println("Etat starting turn");
+					//System.out.println("Etat starting turn");
 				}
 				
 				else if (content.startsWith("Demission:")){

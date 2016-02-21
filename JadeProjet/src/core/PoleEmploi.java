@@ -2,6 +2,9 @@ package core;
 
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.TickerBehaviour;
+import jade.core.behaviours.WakerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
@@ -31,7 +34,10 @@ public class PoleEmploi extends Agent {
 	private HashMap<AID, Emploi> emploisEnvoyes;
 
 	
-	//Agent init
+	//Toujours retraite à faire.
+	//Il faut enlever individu de statutIndividus lors qu'il prend sa retraite.
+	
+	/** Agent init */
 	protected void setup() {
 		// Printout a welcome message
 		System.out.println("Hello! PoleEmploi-agent"+ getAID().getName()+ " is ready.");
@@ -57,19 +63,20 @@ public class PoleEmploi extends Agent {
 		addBehaviour(new AttenteMessage());
 	}
 	
-	//Agent clean-up
+	/** Agent clean-up */
 	protected void takeDown(){
 		//Dismissal message
 		System.out.println("PoleEmploi-agent " + getAID().getName() + " terminating.");
 	}
 	
+	/** Comportement pour la lecture des messages INFORM et leurs traitements. */
 	private class AttenteMessage extends CyclicBehaviour {
 		public void action() {
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
 				
-				if (msg.getConversationId().equals("PublierEmplois")){
+				if (msg.getConversationId() != null && msg.getConversationId().equals("PublierEmplois")){
 					try {
 						statutEmplois.put((Emploi)msg.getContentObject(), StatutEmploi.Disponible);
 						proposerEmploi((Emploi)msg.getContentObject());
@@ -88,11 +95,14 @@ public class PoleEmploi extends Agent {
 						statutEmplois.remove(emploisEnvoyes.get(msg.getSender()), StatutEmploi.Attente);
 						emploisEnvoyes.remove(msg.getSender());
 					}
-					else if (content.startsWith("EmploiRefuse")){
+					else if (content.equals("EmploiRefuse")){
 						Emploi emploiRepropose = emploisEnvoyes.get(msg.getSender());
 						statutEmplois.put(emploiRepropose, StatutEmploi.Disponible);
 						proposerEmploi(emploiRepropose);
 						emploisEnvoyes.remove(msg.getSender());
+					}
+					else if (content.equals("Retraite")){
+						statutIndividus.remove(msg.getSender());
 					}
 					else {
 						DFAgentDescription[] dfds;
@@ -113,25 +123,52 @@ public class PoleEmploi extends Agent {
 		}
 	}
 	
+	/** Gère l'envoi des messages de PoleEmploi à un individu qualifié aléatoire, qui ne dispose 
+	 *  pas déjà d'un proposition d'emploi.*/
 	private void proposerEmploi(Emploi emploi) {
-		//Si tous les individus ont déjà reçu une proposition d'emploi?
-		
+		//Si tous les individus ont déjà reçu une proposition d'emploi?		
 		//Créer message
 		ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
 		AID individuDestine = null;
-		do {
-			individuDestine = Util.getRandomService(this, "nivQualif"+emploi.getNiveauQualificationNecessaire());
-		} while (emploisEnvoyes.containsKey(individuDestine));
-		inform.addReceiver(individuDestine);
-		try {
-			inform.setContentObject(emploi);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		send(inform);
 		
-		//Changer ses infos
-		statutEmplois.put(emploi, StatutEmploi.Attente);
-		emploisEnvoyes.put(individuDestine, emploi);
+		individuDestine = Util.getRandomService(this, "nivQualif"+emploi.getNiveauQualificationNecessaire());
+		if (!emploisEnvoyes.containsKey(individuDestine)){
+			inform.addReceiver(individuDestine);
+			try {
+				inform.setContentObject(emploi);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			send(inform);
+			
+			//Changer ses infos
+			statutEmplois.put(emploi, StatutEmploi.Attente);
+			emploisEnvoyes.put(individuDestine, emploi);
+		}
+		else {
+			addBehaviour(new ProposerEmploi(this,emploi));
+		}		
+	}
+
+	/** Comportement qui dispose d'un délai pour permettre à PoleEmploi de lire les messages.*/
+	private class ProposerEmploi extends OneShotBehaviour {
+		Emploi emploi;
+		
+		public ProposerEmploi(Agent a, Emploi emp){
+			super(a);
+			emploi = emp;
+		}
+
+		public void action() {
+			myAgent.addBehaviour(
+				new WakerBehaviour(myAgent, 2000){
+					public void handleElapsedTimeout() { 
+						proposerEmploi(emploi);
+					}
+				}		
+			);
+			
+		}
+		
 	}
 }
