@@ -129,6 +129,7 @@ public class Etat extends Agent {
 	 *  Utilise la référence contenue dans le message pour mettre à jour 
 	 *  l'individu dans l'emploi correspondant. */
 	private void TraiteReponseEmploi(ACLMessage rempli) {
+		System.out.println("Reception réponse emploi");
 		String [] content = rempli.getContent().split(":");
 		emplois.get(Integer.parseInt(content[1])).setEmploye(rempli.getSender());
 	}
@@ -137,6 +138,7 @@ public class Etat extends Agent {
 	 *  Utilise la référence contenue dans le message pour mettre à null 
 	 *  l'individu dans l'emploi correspondant et publie "directement" l'emploi libéré. */
 	private void TraiteReponseDemission(ACLMessage demission) {
+		System.out.println("Reception Démission");
 		String [] content = demission.getContent().split(":");
 		Emploi emploiDemission = emplois.get(Integer.parseInt(content[1]));
 		emploiDemission.setEmploye(null);

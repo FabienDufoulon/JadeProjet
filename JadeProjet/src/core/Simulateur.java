@@ -78,7 +78,7 @@ public class Simulateur {
 		//Etat
 		emploisParQualif = new int[]{2,3,1};
 		revenusParQualif = new int[]{20,20,20};
-		tempsLibreParQualif = new int[]{5,4,3};
+		tempsLibreParQualif = new int[]{5,6,6};
 		
 		parametresEtat = new Object[9];
 		for (int i = 0; i < 3; i++){

@@ -36,6 +36,11 @@ public class PoleEmploi extends Agent {
 	private HashMap<Emploi, StatutEmploi> statutEmplois;
 	/** Permet d'obtenir l'emploi que l'on a envoye à un certain individu. */
 	private HashMap<AID, Emploi> emploisEnvoyes;
+	
+	/** Permet d'obtenir l'emploi que l'on a envoye à un certain individu. 
+	 *  La référence emploi est le nom local de l'employeur correspondant, à
+	 *  laquelle on concatène la référence de l'emploi.*/
+	private HashMap<String, Emploi> referencesEmplois;
 
 	
 	//Toujours retraite à faire.
@@ -49,6 +54,8 @@ public class PoleEmploi extends Agent {
 		statutIndividus = new HashMap<AID, StatutEmploye>();
 		statutEmplois = new HashMap<Emploi, StatutEmploi>();
 		emploisEnvoyes = new HashMap<AID, Emploi>();
+		
+		referencesEmplois = new HashMap<String, Emploi>();
 	
 		//Ajout des comportements
 		addBehaviour(new AttenteMessage());
@@ -69,8 +76,14 @@ public class PoleEmploi extends Agent {
 				
 				if (msg.getConversationId() != null && msg.getConversationId().equals("PublierEmplois")){
 					try {
-						statutEmplois.put((Emploi)msg.getContentObject(), StatutEmploi.Disponible);
-						proposerEmploi((Emploi)msg.getContentObject());
+					
+						Emploi emp = (Emploi)msg.getContentObject();
+						statutEmplois.put(emp, StatutEmploi.Disponible);
+						
+						String refEmploi = msg.getSender().getLocalName()+emp.getRefEmploi();
+						referencesEmplois.put(refEmploi, emp);
+						proposerEmploi(refEmploi);
+
 					} catch (UnreadableException e) {
 						e.printStackTrace();
 					}
@@ -84,8 +97,13 @@ public class PoleEmploi extends Agent {
 					}
 					else if (content.startsWith("EmploiAccepte")){
 						statutIndividus.put(msg.getSender(), StatutEmploye.Employe);
-						statutEmplois.remove(emploisEnvoyes.get(msg.getSender()), StatutEmploi.Attente);
-						emploisEnvoyes.remove(msg.getSender());
+		
+						AID senderAID = msg.getSender();
+						Emploi emploiAccepte = emploisEnvoyes.get(senderAID);
+						String refEmploi = senderAID.getLocalName()+emploiAccepte.getRefEmploi();
+						referencesEmplois.remove(refEmploi);
+						statutEmplois.remove(emploiAccepte);
+						emploisEnvoyes.remove(senderAID);
 					}
 					else if (content.equals("Inscription")){
 						statutIndividus.put(msg.getSender(), StatutEmploye.Chomage);
@@ -96,8 +114,11 @@ public class PoleEmploi extends Agent {
 					else if (content.equals("EmploiRefuse")){
 						Emploi emploiRepropose = emploisEnvoyes.get(msg.getSender());
 						statutEmplois.put(emploiRepropose, StatutEmploi.Disponible);
-						proposerEmploi(emploiRepropose);
-						emploisEnvoyes.remove(msg.getSender());
+						
+						String refEmploi = msg.getSender().getLocalName()+emploiRepropose.getRefEmploi();
+						referencesEmplois.put(refEmploi, emploiRepropose);
+						proposerEmploi(refEmploi);
+						//emploisEnvoyes.remove(msg.getSender());
 					}
 					else if (content.equals("Retraite")){
 						statutIndividus.remove(msg.getSender());
@@ -113,7 +134,9 @@ public class PoleEmploi extends Agent {
 	
 	/** Gère l'envoi des messages de PoleEmploi à un individu qualifié aléatoire, qui ne dispose 
 	 *  pas déjà d'un proposition d'emploi.*/
-	private void proposerEmploi(Emploi emploi) {
+	private void proposerEmploi(String refEmploi) {
+		Emploi emploi = referencesEmplois.get(refEmploi);
+		
 		//Si tous les individus ont déjà reçu une proposition d'emploi?		
 		//Créer message
 		ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
@@ -133,26 +156,27 @@ public class PoleEmploi extends Agent {
 			//Changer ses infos
 			statutEmplois.put(emploi, StatutEmploi.Attente);
 			emploisEnvoyes.put(individuDestine, emploi);
+			referencesEmplois.remove(refEmploi);
 		}
 		else {
-			addBehaviour(new ProposerEmploi(this,emploi));
-		}		
+			addBehaviour(new ProposerEmploi(this,refEmploi));
+		}
 	}
 
 	/** Comportement qui dispose d'un délai pour permettre à PoleEmploi de lire les messages.*/
 	private class ProposerEmploi extends OneShotBehaviour {
-		Emploi emploi;
+		String refEmploi;
 		
-		public ProposerEmploi(Agent a, Emploi emp){
+		public ProposerEmploi(Agent a, String _refEmploi){
 			super(a);
-			emploi = emp;
+			refEmploi = _refEmploi;
 		}
 
 		public void action() {
 			myAgent.addBehaviour(
 				new WakerBehaviour(myAgent, 2000){
 					public void handleElapsedTimeout() { 
-						proposerEmploi(emploi);
+						proposerEmploi(refEmploi);
 					}
 				}		
 			);
@@ -170,11 +194,14 @@ public class PoleEmploi extends Agent {
 		int individus = statutIndividus.size();
 		int nombreEmploisNonPourvus = statutEmplois.size();
 		int nombreEmploisEnvoyes = emploisEnvoyes.size();
+		int nombreReferencesEmplois = referencesEmplois.size();
 		
 		System.out.println(individus + " individus dans le système");
 		System.out.println(employes + " individus employes dans le système");
 		System.out.println(rechercheEmplois + " individus en recherche d'emplois dans le système");
 		System.out.println(nombreEmploisNonPourvus + " nombreEmploisNonPourvus dans le système");
 		System.out.println(nombreEmploisEnvoyes + " nombreEmploisEnvoyes dans le système");
+		
+		System.out.println(nombreReferencesEmplois + " nombreReferencesEmplois dans le système");
 	}
 }
