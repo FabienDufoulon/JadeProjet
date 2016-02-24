@@ -52,7 +52,8 @@ public class Etat extends Agent {
 				for(int i = 0; i < nombreEmplois; i++){
 					IntSupplier _revenu = (IntSupplier & Serializable)() -> revenu ;
 					//Faire une loi normale ici pour le temps libre
-					IntSupplier _tempsLibre = (IntSupplier & Serializable)() -> tempsLibreMoyen ;
+					IntSupplier _tempsLibre = (IntSupplier & Serializable)() 
+								-> UtilRandom.discreteNextGaussian(tempsLibreMoyen, tempsLibreMoyen/3, 1, tempsLibreMoyen*2);
 					
 					Emploi temp = new Emploi(getAID(), nivQualif, _tempsLibre, _revenu, derniereReferenceEmploi);
 					emplois.put(derniereReferenceEmploi, temp);
@@ -129,7 +130,7 @@ public class Etat extends Agent {
 	 *  Utilise la référence contenue dans le message pour mettre à jour 
 	 *  l'individu dans l'emploi correspondant. */
 	private void TraiteReponseEmploi(ACLMessage rempli) {
-		System.out.println("Reception réponse emploi");
+		//System.out.println("Reception réponse emploi");
 		String [] content = rempli.getContent().split(":");
 		emplois.get(Integer.parseInt(content[1])).setEmploye(rempli.getSender());
 	}
@@ -138,7 +139,7 @@ public class Etat extends Agent {
 	 *  Utilise la référence contenue dans le message pour mettre à null 
 	 *  l'individu dans l'emploi correspondant et publie "directement" l'emploi libéré. */
 	private void TraiteReponseDemission(ACLMessage demission) {
-		System.out.println("Reception Démission");
+		//System.out.println("Reception Démission");
 		String [] content = demission.getContent().split(":");
 		Emploi emploiDemission = emplois.get(Integer.parseInt(content[1]));
 		emploiDemission.setEmploye(null);

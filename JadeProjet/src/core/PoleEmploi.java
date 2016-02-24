@@ -76,12 +76,14 @@ public class PoleEmploi extends Agent {
 				
 				if (msg.getConversationId() != null && msg.getConversationId().equals("PublierEmplois")){
 					try {
-					
+						System.out.println("PublierEmplois");
 						Emploi emp = (Emploi)msg.getContentObject();
+						System.out.println(statutEmplois.size() + " : " + referencesEmplois.size());
 						statutEmplois.put(emp, StatutEmploi.Disponible);
 						
 						String refEmploi = msg.getSender().getLocalName()+emp.getRefEmploi();
 						referencesEmplois.put(refEmploi, emp);
+						System.out.println(statutEmplois.size() + " : " + referencesEmplois.size());
 						proposerEmploi(refEmploi);
 
 					} catch (UnreadableException e) {
@@ -96,6 +98,8 @@ public class PoleEmploi extends Agent {
 						//System.out.println("PoleEmploi starting turn");
 					}
 					else if (content.startsWith("EmploiAccepte")){
+						System.out.println("EmploiAccepte");
+						System.out.println(statutEmplois.size() + " : " + referencesEmplois.size());
 						statutIndividus.put(msg.getSender(), StatutEmploye.Employe);
 		
 						AID senderAID = msg.getSender();
@@ -104,6 +108,8 @@ public class PoleEmploi extends Agent {
 						referencesEmplois.remove(refEmploi);
 						statutEmplois.remove(emploiAccepte);
 						emploisEnvoyes.remove(senderAID);
+						System.out.println(statutEmplois.size() + " : " + referencesEmplois.size());
+
 					}
 					else if (content.equals("Inscription")){
 						statutIndividus.put(msg.getSender(), StatutEmploye.Chomage);
@@ -112,12 +118,19 @@ public class PoleEmploi extends Agent {
 						statutIndividus.put(msg.getSender(), StatutEmploye.Chomage);
 					}
 					else if (content.equals("EmploiRefuse")){
+						System.out.println("EmploiRefuse");
+						System.out.println(statutEmplois.size() + " : " + referencesEmplois.size());
+
 						Emploi emploiRepropose = emploisEnvoyes.get(msg.getSender());
 						statutEmplois.put(emploiRepropose, StatutEmploi.Disponible);
 						
 						String refEmploi = msg.getSender().getLocalName()+emploiRepropose.getRefEmploi();
 						referencesEmplois.put(refEmploi, emploiRepropose);
+						System.out.println(statutEmplois.size() + " : " + referencesEmplois.size());
+
 						proposerEmploi(refEmploi);
+						System.out.println(statutEmplois.size() + " : " + referencesEmplois.size());
+
 						//emploisEnvoyes.remove(msg.getSender());
 					}
 					else if (content.equals("Retraite")){
@@ -143,6 +156,7 @@ public class PoleEmploi extends Agent {
 		inform.setConversationId("ProposeEmploi");
 		AID individuDestine = null;
 		
+		//if emploi null, normalement pas possible
 		individuDestine = Util.getRandomService(this, "nivQualif"+emploi.getNiveauQualificationNecessaire());
 		if (!emploisEnvoyes.containsKey(individuDestine)){
 			inform.addReceiver(individuDestine);
@@ -201,6 +215,7 @@ public class PoleEmploi extends Agent {
 		System.out.println(rechercheEmplois + " individus en recherche d'emplois dans le système");
 		System.out.println(nombreEmploisNonPourvus + " nombreEmploisNonPourvus dans le système");
 		System.out.println(nombreEmploisEnvoyes + " nombreEmploisEnvoyes dans le système");
+		System.out.println(employes+nombreEmploisNonPourvus+ "nombre d'emplois perçus par Pole Emploi en tout.");
 		
 		System.out.println(nombreReferencesEmplois + " nombreReferencesEmplois dans le système");
 	}

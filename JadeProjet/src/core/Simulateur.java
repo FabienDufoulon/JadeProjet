@@ -1,5 +1,8 @@
 package core;
 
+import java.io.Serializable;
+import java.util.function.IntSupplier;
+
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
@@ -48,9 +51,9 @@ public class Simulateur {
 	
 	public Simulateur(){
 		//Paramètres simulateur
-		individusDebut = 5;
-		individusEntrants = 1;
-		individusSortants = 1;
+		individusDebut = 50;
+		individusEntrants = 5;
+		individusSortants = 5;
 		tempsTour = 5000;
 		parametresHorloge = new Object[5];
 		parametresHorloge[0] = tempsTour;
@@ -60,7 +63,7 @@ public class Simulateur {
 		
 		//Individus
 		tempsLibreMoyen = 5;
-		revenuMoyen = 10;
+		revenuMoyen = 6;
 		x = 2;
 		y = 2;
 		z = 2;
@@ -76,9 +79,9 @@ public class Simulateur {
 		
 		
 		//Etat
-		emploisParQualif = new int[]{2,3,1};
-		revenusParQualif = new int[]{20,20,20};
-		tempsLibreParQualif = new int[]{5,6,6};
+		emploisParQualif = new int[]{20,30,30};
+		revenusParQualif = new int[]{4,6,8};
+		tempsLibreParQualif = new int[]{5,6,4};
 		
 		parametresEtat = new Object[9];
 		for (int i = 0; i < 3; i++){
@@ -97,14 +100,26 @@ public class Simulateur {
 		
 		/*Lancement de la plate-forme*/
 		Profile pMain = new ProfileImpl("localhost", 8888, null);
+		// La taille des search du DF étant limité à 100 sinon
+		String property_dx_maxresult = "10000";
+		pMain.setParameter("jade_domain_df_maxresult", property_dx_maxresult); 
+		//
 		AgentContainer mc = rt.createMainContainer(pMain);
+		
+		IntSupplier _tempsLibre = () -> UtilRandom.discreteNextGaussian(tempsLibreMoyen, tempsLibreMoyen/3, 1, tempsLibreMoyen*2);
+		IntSupplier _revenuMoyen = () -> UtilRandom.discreteNextGaussian(revenuMoyen, revenuMoyen/3, 1, revenuMoyen*2);
+		IntSupplier _nivQualif = () -> UtilRandom.discreteNextGaussian(niveauQualif, 1, 1, 3);		
 		
 		/*Lancement des agents */
 		for (int i = 1; i <= individusDebut; i++){
 			//Faire les lois normales ici
-			parametresIndividu[3] = niveauQualif;
-			parametresIndividu[4] = tempsLibreMoyen;
-			parametresIndividu[5] = revenuMoyen;
+			//IntSupplier _tempsLibre = (IntSupplier & Serializable)() -> tempsLibreMoyen ;
+			//Create Util for random generation?
+			//donner moyenne, std_var et limite min, max puis discrétiser.
+			
+			parametresIndividu[3] = _nivQualif.getAsInt();
+			parametresIndividu[4] = _tempsLibre.getAsInt();
+			parametresIndividu[5] = _revenuMoyen.getAsInt();
 			
 			mc.createNewAgent("Individu" + i, Individu.class.getName(), parametresIndividu).start();
 		}
