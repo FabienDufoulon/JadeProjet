@@ -78,7 +78,7 @@ public class Individu extends Agent {
 			//Créer message Inscription
 			ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
 			inform.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
-			inform.setContent("Inscription");
+			inform.setContent("Inscription:"+nivQualif);
 			send(inform);
 			
 			
@@ -102,6 +102,7 @@ public class Individu extends Agent {
 		try { DFService.deregister(this); }
         catch (Exception e) {}
 		
+		System.out.println("Takedown Done");
 		//Dismissal message
 		//System.out.println("Individu-agent " + getAID().getName() + " terminating.");
 	}
@@ -110,6 +111,7 @@ public class Individu extends Agent {
 	 *  et envoie d'un message à PoleEmploi, Takedown pour lui-même.
 	 *  */
 	private void retire(){
+		System.out.println("Retire");
 		//Demission de l'emploi.
 		faireDemission();
 		
@@ -119,6 +121,7 @@ public class Individu extends Agent {
 		inform.setContent("Retraite");
 		send(inform);
 		
+		System.out.println("Before Takedown");
 		takeDown();
 	}
 	
@@ -162,6 +165,7 @@ public class Individu extends Agent {
 				//On vérifie si le message n'est pas une proposition d'emploi d'abord
 				//Dans ce cas le contenu est un objet.
 				if (msg.getConversationId() != null && msg.getConversationId().equals("ProposeEmploi")){
+					//System.out.println("RecoitEmploi");
 					if (statut == StatutIndividu.Chomage){
 						etudierEmploi(msg);
 					}
@@ -178,6 +182,12 @@ public class Individu extends Agent {
 						if (statut == StatutIndividu.Employe){
 							addBehaviour(new VieEmploye());
 						}
+						
+						//Envoyer message temps libre min, revenu min : informationTour
+						ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+						inform.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
+						inform.setContent("InformationTour:"+tempsLibreMin+":"+revenuMin);
+						send(inform);
 					}
 					
 					//L'individu part à la retraite
@@ -196,6 +206,7 @@ public class Individu extends Agent {
 	/** Fonction qui gère le cas quand l'individu reçoit un message de proposition d'emploi,
 	 *  il vérifie alors si cet emploi le satisfait, et si oui répond à PoleEmploi, se met à jour. */
 	private void etudierEmploi(ACLMessage msg){
+		//System.out.println("etudierEmploi");
 		//Lecture de l'instance emploi dans le message.
 		Emploi content = null;
 		try {
@@ -263,6 +274,13 @@ public class Individu extends Agent {
 			if (emploiCourant == null) System.out.println("Gros problème ! Employé sans emploi correct.");
 			else{
 				int tempsLibreTour = emploiCourant.getTempsLibre();
+				int revenuTour = emploiCourant.getRevenu();
+				//Envoyer message temps libre tour, revenu tour : informationEmploye
+				ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+				inform.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
+				inform.setContent("InformationEmploye:"+tempsLibreTour+":"+revenuTour);
+				send(inform);
+				
 				if (tempsLibreTour >= tempsLibreMin) compteMoisTLInsuffisant = 0;
 				else{
 					compteMoisTLInsuffisant++;

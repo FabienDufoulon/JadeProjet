@@ -37,6 +37,19 @@ public class PoleEmploi extends Agent {
 	/** Permet d'obtenir l'emploi que l'on a envoye à un certain individu. */
 	private HashMap<AID, Emploi> emploisEnvoyes;
 	
+	//Stat
+	/** Permet d'obtenir le niveau de qualification d'un individu. */
+	private HashMap<AID, Integer> niveauQualificationsIndividus;
+	
+	/** Permet d'obtenir le revenu min d'un individu. */
+	private HashMap<AID, Integer> revenuMinIndividu;
+	/** Permet d'obtenir le temps libre min d'un individu. */
+	private HashMap<AID, Integer> tempsLibreMinIndividu;
+	/** Permet d'obtenir le revenu moyen d'un individu. */
+	private HashMap<AID, Integer> revenuMoyenIndividu;
+	/** Permet d'obtenir le temps libre moyen d'un individu. */
+	private HashMap<AID, Integer> tempsLibreMoyenIndividu;
+	
 	/** Permet d'obtenir l'emploi que l'on a envoye à un certain individu. 
 	 *  La référence emploi est le nom local de l'employeur correspondant, à
 	 *  laquelle on concatène la référence de l'emploi.*/
@@ -54,6 +67,8 @@ public class PoleEmploi extends Agent {
 		statutIndividus = new HashMap<AID, StatutEmploye>();
 		statutEmplois = new HashMap<Emploi, StatutEmploi>();
 		emploisEnvoyes = new HashMap<AID, Emploi>();
+		
+		niveauQualificationsIndividus = new HashMap<AID, Integer>();
 		
 		referencesEmplois = new HashMap<String, Emploi>();
 	
@@ -76,14 +91,11 @@ public class PoleEmploi extends Agent {
 				
 				if (msg.getConversationId() != null && msg.getConversationId().equals("PublierEmplois")){
 					try {
-						System.out.println("PublierEmplois");
 						Emploi emp = (Emploi)msg.getContentObject();
-						System.out.println(statutEmplois.size() + " : " + referencesEmplois.size());
 						statutEmplois.put(emp, StatutEmploi.Disponible);
 						
 						String refEmploi = msg.getSender().getLocalName()+emp.getRefEmploi();
 						referencesEmplois.put(refEmploi, emp);
-						System.out.println(statutEmplois.size() + " : " + referencesEmplois.size());
 						proposerEmploi(refEmploi);
 
 					} catch (UnreadableException e) {
@@ -98,43 +110,46 @@ public class PoleEmploi extends Agent {
 						//System.out.println("PoleEmploi starting turn");
 					}
 					else if (content.startsWith("EmploiAccepte")){
-						System.out.println("EmploiAccepte");
-						System.out.println(statutEmplois.size() + " : " + referencesEmplois.size());
 						statutIndividus.put(msg.getSender(), StatutEmploye.Employe);
 		
 						AID senderAID = msg.getSender();
 						Emploi emploiAccepte = emploisEnvoyes.get(senderAID);
-						String refEmploi = senderAID.getLocalName()+emploiAccepte.getRefEmploi();
+						AID employeurAID = emploiAccepte.getEmployeur(); 
+						String refEmploi = employeurAID.getLocalName()+emploiAccepte.getRefEmploi();
+						
 						referencesEmplois.remove(refEmploi);
 						statutEmplois.remove(emploiAccepte);
 						emploisEnvoyes.remove(senderAID);
-						System.out.println(statutEmplois.size() + " : " + referencesEmplois.size());
-
 					}
-					else if (content.equals("Inscription")){
+					else if (content.startsWith("Inscription")){
 						statutIndividus.put(msg.getSender(), StatutEmploye.Chomage);
+						
+						String[] split = msg.getContent().split(":");
+						niveauQualificationsIndividus.put(msg.getSender(), Integer.parseInt(split[1]));
 					}
 					else if (content.startsWith("Demission")){
 						statutIndividus.put(msg.getSender(), StatutEmploye.Chomage);
 					}
 					else if (content.equals("EmploiRefuse")){
-						System.out.println("EmploiRefuse");
-						System.out.println(statutEmplois.size() + " : " + referencesEmplois.size());
-
 						Emploi emploiRepropose = emploisEnvoyes.get(msg.getSender());
 						statutEmplois.put(emploiRepropose, StatutEmploi.Disponible);
 						
-						String refEmploi = msg.getSender().getLocalName()+emploiRepropose.getRefEmploi();
-						referencesEmplois.put(refEmploi, emploiRepropose);
-						System.out.println(statutEmplois.size() + " : " + referencesEmplois.size());
-
+						String refEmploi = emploiRepropose.getEmployeur().getLocalName()+emploiRepropose.getRefEmploi();
 						proposerEmploi(refEmploi);
-						System.out.println(statutEmplois.size() + " : " + referencesEmplois.size());
-
-						//emploisEnvoyes.remove(msg.getSender());
 					}
 					else if (content.equals("Retraite")){
 						statutIndividus.remove(msg.getSender());
+						niveauQualificationsIndividus.remove(msg.getSender());
+					}
+					else if (content.startsWith("InformationTour")){
+						String[] split = msg.getContent().split(":");
+						tempsLibreMinIndividu.put(msg.getSender(), Integer.parseInt(split[1]));
+						revenuMinIndividu.put(msg.getSender(), Integer.parseInt(split[2]));
+					}
+					else if (content.startsWith("InformationEmploye")){
+						String[] split = msg.getContent().split(":");
+						tempsLibreMoyenIndividu.put(msg.getSender(), Integer.parseInt(split[1]));
+						revenuMoyenIndividu.put(msg.getSender(), Integer.parseInt(split[2]));
 					}
 				}
 				
@@ -148,6 +163,7 @@ public class PoleEmploi extends Agent {
 	/** Gère l'envoi des messages de PoleEmploi à un individu qualifié aléatoire, qui ne dispose 
 	 *  pas déjà d'un proposition d'emploi.*/
 	private void proposerEmploi(String refEmploi) {
+		//System.out.println("ProposeEmploi");
 		Emploi emploi = referencesEmplois.get(refEmploi);
 		
 		//Si tous les individus ont déjà reçu une proposition d'emploi?		
@@ -170,7 +186,6 @@ public class PoleEmploi extends Agent {
 			//Changer ses infos
 			statutEmplois.put(emploi, StatutEmploi.Attente);
 			emploisEnvoyes.put(individuDestine, emploi);
-			referencesEmplois.remove(refEmploi);
 		}
 		else {
 			addBehaviour(new ProposerEmploi(this,refEmploi));
@@ -202,21 +217,45 @@ public class PoleEmploi extends Agent {
 	
 	private void statistiques(){
 		System.out.println("S");
-		//int count = Collections.frequency(new ArrayList<String>(HM.values()), "Red");
+
 		int employes = Collections.frequency(statutIndividus.values(), StatutEmploye.Employe);
 		int rechercheEmplois = Collections.frequency(statutIndividus.values(), StatutEmploye.Chomage);
 		int individus = statutIndividus.size();
 		int nombreEmploisNonPourvus = statutEmplois.size();
 		int nombreEmploisEnvoyes = emploisEnvoyes.size();
 		int nombreReferencesEmplois = referencesEmplois.size();
+		float tauxChomage = (float) rechercheEmplois / individus;
 		
-		System.out.println(individus + " individus dans le système");
-		System.out.println(employes + " individus employes dans le système");
-		System.out.println(rechercheEmplois + " individus en recherche d'emplois dans le système");
+		int individusQualif1 = Collections.frequency(niveauQualificationsIndividus.values(), 1);
+		int individusQualif2 = Collections.frequency(niveauQualificationsIndividus.values(), 2);
+		int individusQualif3 = Collections.frequency(niveauQualificationsIndividus.values(), 3);
+		
+		int revenuMinMoyen = Collections. (statutIndividus.values(). ,
+		
+		System.out.println(individus + " individus dans le système.");
+		
+		System.out.println(tauxChomage + " taux de chômage dans le système.");
+		//System.out.println(employes + " individus employes dans le système");
+		//System.out.println(rechercheEmplois + " individus en recherche d'emplois dans le système");
+
+		System.out.println(employes+nombreEmploisNonPourvus+ " nombre d'emplois perçus par Pole Emploi en tout.");		
+		
 		System.out.println(nombreEmploisNonPourvus + " nombreEmploisNonPourvus dans le système");
 		System.out.println(nombreEmploisEnvoyes + " nombreEmploisEnvoyes dans le système");
-		System.out.println(employes+nombreEmploisNonPourvus+ "nombre d'emplois perçus par Pole Emploi en tout.");
 		
-		System.out.println(nombreReferencesEmplois + " nombreReferencesEmplois dans le système");
+		System.out.println(individusQualif1 + " individus de niveau 1");	
+		System.out.println(individusQualif2 + " individus de niveau 2");	
+		System.out.println(individusQualif3 + " individus de niveau 3");		
+		
+		
+		
+		//int individusNivQualif1 = Util.searchDF(this,"nivQualif1").length;
+		//int individusNivQualif2 = Util.searchDF(this,"nivQualif2").length;
+		//int individusNivQualif3 = Util.searchDF(this,"nivQualif3").length;		
+		//System.out.println(individusNivQualif1 + " individus de niveau 1 au chômage.");	
+		//System.out.println(individusNivQualif2 + " individus de niveau 2 au chômage.");	
+		//System.out.println(individusNivQualif3 + " individus de niveau 3 au chômage.");	
+		
+		//System.out.println(nombreReferencesEmplois + " nombreReferencesEmplois dans le système");
 	}
 }
