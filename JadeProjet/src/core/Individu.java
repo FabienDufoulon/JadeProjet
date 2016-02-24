@@ -100,9 +100,9 @@ public class Individu extends Agent {
 	protected void takeDown(){
 		//Deregister from DF
 		try { DFService.deregister(this); }
-        catch (Exception e) {}
+        catch (Exception e) {System.out.println("Exception Takedown");}
 		
-		System.out.println("Takedown Done");
+		//System.out.println("Takedown Done");
 		//Dismissal message
 		//System.out.println("Individu-agent " + getAID().getName() + " terminating.");
 	}
@@ -111,7 +111,7 @@ public class Individu extends Agent {
 	 *  et envoie d'un message à PoleEmploi, Takedown pour lui-même.
 	 *  */
 	private void retire(){
-		System.out.println("Retire");
+		//System.out.println("Retire");
 		//Demission de l'emploi.
 		faireDemission();
 		
@@ -121,7 +121,7 @@ public class Individu extends Agent {
 		inform.setContent("Retraite");
 		send(inform);
 		
-		System.out.println("Before Takedown");
+		//System.out.println("Before Takedown");
 		takeDown();
 	}
 	
@@ -143,7 +143,7 @@ public class Individu extends Agent {
 			
 			//Deregister from DF
 			try { DFService.deregister(this); }
-	        catch (Exception e) {}
+	        catch (Exception e) {System.out.println("Exception démission");}
 			
 			//DF : enregistrer avec le niveau de qualification
 			ServiceDescription sd  = new ServiceDescription();

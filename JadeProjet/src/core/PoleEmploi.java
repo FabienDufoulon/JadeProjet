@@ -4,25 +4,24 @@ import jade.core.Agent;
 
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 
 import jade.core.AID;
-import jade.domain.DFService;
-import jade.domain.FIPAException;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.SearchConstraints;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
 
-import jade.proto.SubscriptionInitiator;
 
 public class PoleEmploi extends Agent {
 	/** Statut des employes. Surtout utile à des fins statistiques. */
@@ -37,6 +36,12 @@ public class PoleEmploi extends Agent {
 	/** Permet d'obtenir l'emploi que l'on a envoye à un certain individu. */
 	private HashMap<AID, Emploi> emploisEnvoyes;
 	
+	/** Permet d'obtenir l'emploi que l'on a envoye à un certain individu. 
+	 *  La référence emploi est le nom local de l'employeur correspondant, à
+	 *  laquelle on concatène la référence de l'emploi.*/
+	private HashMap<String, Emploi> referencesEmplois;
+	
+	
 	//Stat
 	/** Permet d'obtenir le niveau de qualification d'un individu. */
 	private HashMap<AID, Integer> niveauQualificationsIndividus;
@@ -50,10 +55,14 @@ public class PoleEmploi extends Agent {
 	/** Permet d'obtenir le temps libre moyen d'un individu. */
 	private HashMap<AID, Integer> tempsLibreMoyenIndividu;
 	
-	/** Permet d'obtenir l'emploi que l'on a envoye à un certain individu. 
-	 *  La référence emploi est le nom local de l'employeur correspondant, à
-	 *  laquelle on concatène la référence de l'emploi.*/
-	private HashMap<String, Emploi> referencesEmplois;
+	//Sortie fichier
+	ArrayList<Double> tauxChomageTemps;
+	ArrayList<Double> proportionNiv1Temps;
+	ArrayList<Double> proportionNiv2Temps;
+	ArrayList<Double> proportionNiv3Temps;
+	ArrayList<Double> revenuMinMoyenTemps;
+	int toursOutLim = 500;
+	int toursOut = 0;
 
 	
 	//Toujours retraite à faire.
@@ -68,9 +77,21 @@ public class PoleEmploi extends Agent {
 		statutEmplois = new HashMap<Emploi, StatutEmploi>();
 		emploisEnvoyes = new HashMap<AID, Emploi>();
 		
-		niveauQualificationsIndividus = new HashMap<AID, Integer>();
-		
 		referencesEmplois = new HashMap<String, Emploi>();
+		
+		//Stat
+		niveauQualificationsIndividus = new HashMap<AID, Integer>();
+		revenuMinIndividu = new HashMap<AID, Integer>();
+		tempsLibreMinIndividu = new HashMap<AID, Integer>();
+		revenuMoyenIndividu = new HashMap<AID, Integer>();
+		tempsLibreMoyenIndividu = new HashMap<AID, Integer>();
+
+		//Sortie fichier
+		tauxChomageTemps = new ArrayList<Double>();
+		proportionNiv1Temps = new ArrayList<Double>();
+		proportionNiv2Temps = new ArrayList<Double>();
+		proportionNiv3Temps = new ArrayList<Double>();
+		revenuMinMoyenTemps = new ArrayList<Double>();
 	
 		//Ajout des comportements
 		addBehaviour(new AttenteMessage());
@@ -107,6 +128,21 @@ public class PoleEmploi extends Agent {
 					String content = msg.getContent();
 					if (content.equals("Turn")){
 						statistiques();
+						toursOut++;
+						
+						if (toursOut >= toursOutLim){
+							toursOut = 0;
+							System.out.println("Sortie fichier");
+							try{
+								FileWriter writer = new FileWriter("output.txt"); 
+								for(double d: tauxChomageTemps) {
+									String st = d + ";";
+									writer.write(st);
+								}
+								writer.close();
+							}
+							catch(Exception e){}
+						}
 						//System.out.println("PoleEmploi starting turn");
 					}
 					else if (content.startsWith("EmploiAccepte")){
@@ -140,6 +176,10 @@ public class PoleEmploi extends Agent {
 					else if (content.equals("Retraite")){
 						statutIndividus.remove(msg.getSender());
 						niveauQualificationsIndividus.remove(msg.getSender());
+						tempsLibreMinIndividu.remove(msg.getSender());
+						revenuMinIndividu.remove(msg.getSender());
+						tempsLibreMoyenIndividu.remove(msg.getSender());
+						revenuMoyenIndividu.remove(msg.getSender());
 					}
 					else if (content.startsWith("InformationTour")){
 						String[] split = msg.getContent().split(":");
@@ -216,23 +256,37 @@ public class PoleEmploi extends Agent {
 	
 	
 	private void statistiques(){
-		System.out.println("S");
+		//System.out.println("S");
 
 		int employes = Collections.frequency(statutIndividus.values(), StatutEmploye.Employe);
 		int rechercheEmplois = Collections.frequency(statutIndividus.values(), StatutEmploye.Chomage);
 		int individus = statutIndividus.size();
 		int nombreEmploisNonPourvus = statutEmplois.size();
 		int nombreEmploisEnvoyes = emploisEnvoyes.size();
-		int nombreReferencesEmplois = referencesEmplois.size();
-		float tauxChomage = (float) rechercheEmplois / individus;
+		//int nombreReferencesEmplois = referencesEmplois.size();
+		double tauxChomage = (double) rechercheEmplois / individus;
 		
 		int individusQualif1 = Collections.frequency(niveauQualificationsIndividus.values(), 1);
 		int individusQualif2 = Collections.frequency(niveauQualificationsIndividus.values(), 2);
 		int individusQualif3 = Collections.frequency(niveauQualificationsIndividus.values(), 3);
 		
-		int revenuMinMoyen = Collections. (statutIndividus.values(). ,
+		double proportionNiv1 = (double) individusQualif1 / individus;
+		double proportionNiv2 = (double) individusQualif2 / individus;
+		double proportionNiv3 = (double) individusQualif3 / individus;
 		
-		System.out.println(individus + " individus dans le système.");
+		int revenuMinMoyen = average(revenuMinIndividu.values());
+		int tempsLibreMinMoyen = average(tempsLibreMinIndividu.values());
+		int revenuMoyenMoyen = average(revenuMoyenIndividu.values());
+		int tempsLibreMoyenMoyen = average(tempsLibreMoyenIndividu.values());
+		
+		tauxChomageTemps.add((double) tauxChomage);
+		proportionNiv1Temps.add((double) proportionNiv1);
+		proportionNiv2Temps.add((double) proportionNiv2);
+		proportionNiv3Temps.add((double) proportionNiv3);
+		revenuMinMoyenTemps.add((double) revenuMinMoyen);
+		
+		
+		/*System.out.println(individus + " individus dans le système.");
 		
 		System.out.println(tauxChomage + " taux de chômage dans le système.");
 		//System.out.println(employes + " individus employes dans le système");
@@ -245,7 +299,12 @@ public class PoleEmploi extends Agent {
 		
 		System.out.println(individusQualif1 + " individus de niveau 1");	
 		System.out.println(individusQualif2 + " individus de niveau 2");	
-		System.out.println(individusQualif3 + " individus de niveau 3");		
+		System.out.println(individusQualif3 + " individus de niveau 3");	
+		
+		System.out.println(revenuMinMoyen + " revenu Min Moyen");	
+		System.out.println(tempsLibreMinMoyen + " temps Libre Min Moyen");	
+		System.out.println(revenuMoyenMoyen + " revenu Moyen Moyen");	
+		System.out.println(tempsLibreMoyenMoyen + " temps libre Moyen Moyen");	*/		
 		
 		
 		
@@ -257,5 +316,18 @@ public class PoleEmploi extends Agent {
 		//System.out.println(individusNivQualif3 + " individus de niveau 3 au chômage.");	
 		
 		//System.out.println(nombreReferencesEmplois + " nombreReferencesEmplois dans le système");
+	}
+	
+	public int average(Collection<Integer> col){
+		int sum = 0;
+		int number = 0;
+		
+		for (Integer i : col){
+			sum += i;
+			number++;
+		}
+		
+		if (number != 0) return sum / number;
+		else return 0;
 	}
 }

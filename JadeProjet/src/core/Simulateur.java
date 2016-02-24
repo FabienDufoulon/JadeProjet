@@ -51,22 +51,22 @@ public class Simulateur {
 	
 	public Simulateur(){
 		//Paramètres simulateur
-		individusDebut = 50;
-		individusEntrants = 5;
-		individusSortants = 5;
-		tempsTour = 5000;
-		parametresHorloge = new Object[5];
+		individusDebut = 200;
+		individusEntrants = 2;
+		individusSortants = 2;
+		tempsTour = 500;
+		parametresHorloge = new Object[8];
 		parametresHorloge[0] = tempsTour;
 		parametresHorloge[1] = individusEntrants;
 		parametresHorloge[2] = individusSortants;
 		parametresHorloge[3] = 1 + individusDebut;
 		
 		//Individus
-		tempsLibreMoyen = 5;
-		revenuMoyen = 6;
-		x = 2;
-		y = 2;
-		z = 2;
+		tempsLibreMoyen = 100;
+		revenuMoyen = 2000;
+		x = 3;
+		y = 3;
+		z = 100;
 		niveauQualif = 2;
 		
 		parametresIndividu = new Object[6];
@@ -79,9 +79,9 @@ public class Simulateur {
 		
 		
 		//Etat
-		emploisParQualif = new int[]{20,30,30};
-		revenusParQualif = new int[]{4,6,8};
-		tempsLibreParQualif = new int[]{5,6,4};
+		emploisParQualif = new int[]{100,100,100};
+		revenusParQualif = new int[]{1800,2000,2200};
+		tempsLibreParQualif = new int[]{100,100,100};
 		
 		parametresEtat = new Object[9];
 		for (int i = 0; i < 3; i++){
@@ -107,24 +107,22 @@ public class Simulateur {
 		AgentContainer mc = rt.createMainContainer(pMain);
 		
 		IntSupplier _tempsLibre = () -> UtilRandom.discreteNextGaussian(tempsLibreMoyen, tempsLibreMoyen/3, 1, tempsLibreMoyen*2);
-		IntSupplier _revenuMoyen = () -> UtilRandom.discreteNextGaussian(revenuMoyen, revenuMoyen/3, 1, revenuMoyen*2);
+		IntSupplier _revenu = () -> UtilRandom.discreteNextGaussian(revenuMoyen, revenuMoyen/3, 1, revenuMoyen*2);
 		IntSupplier _nivQualif = () -> UtilRandom.discreteNextGaussian(niveauQualif, 1, 1, 3);		
 		
 		/*Lancement des agents */
-		for (int i = 1; i <= individusDebut; i++){
-			//Faire les lois normales ici
-			//IntSupplier _tempsLibre = (IntSupplier & Serializable)() -> tempsLibreMoyen ;
-			//Create Util for random generation?
-			//donner moyenne, std_var et limite min, max puis discrétiser.
-			
+		for (int i = 1; i <= individusDebut; i++){	
 			parametresIndividu[3] = _nivQualif.getAsInt();
 			parametresIndividu[4] = _tempsLibre.getAsInt();
-			parametresIndividu[5] = _revenuMoyen.getAsInt();
+			parametresIndividu[5] = _revenu.getAsInt();
 			
 			mc.createNewAgent("Individu" + i, Individu.class.getName(), parametresIndividu).start();
 		}
 		
 		parametresHorloge[4] = parametresIndividu;
+		parametresHorloge[5] = _tempsLibre;
+		parametresHorloge[6] = _revenu;
+		parametresHorloge[7] = _nivQualif;
 		
 		mc.createNewAgent("Etat", Etat.class.getName(), parametresEtat).start();
 		mc.createNewAgent("PoleEmploi", PoleEmploi.class.getName(), null).start();

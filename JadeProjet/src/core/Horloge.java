@@ -32,8 +32,17 @@ public class Horloge extends Agent {
 	private int nombreSortants;
 	/** Dernier numéro attribué(ainsi tous les individus ont un nom simple) */
 	private int dernierID;	
-	/** Attributs nécessaires lors de la création d'un individu. */
+	/** Attributs nécessaires lors de la création d'un individu. 
+	 * (les trois derniers éléments seront modifiés pour chaque individu créé.)*/
 	private Object[] parametresIndividus;
+	
+	/** Expression lambda qui renvoie un temps libre min suivant une loi normale. Déterminé par le simulateur. */
+	private IntSupplier tempsLibre;
+	/** Expression lambda qui renvoie un revenu min suivant une loi normale. Déterminé par le simulateur. */
+	private IntSupplier revenu;
+	/** Expression lambda qui renvoie un niveau de qualification suivant une loi normale. 
+	 * Déterminé par le simulateur. */
+	private IntSupplier nivQualif;
 
 	int turn;
 
@@ -52,6 +61,10 @@ public class Horloge extends Agent {
 			dernierID = (int) args[3];
 			parametresIndividus = (Object[]) args[4];
 			
+			tempsLibre = (IntSupplier) args[5];
+			revenu = (IntSupplier) args[6];
+			nivQualif = (IntSupplier) args[7];
+			
 			turn = 0;
 			
 			//Ajout des comportements
@@ -66,7 +79,7 @@ public class Horloge extends Agent {
 					inform = Util.createBroadcastMessage(myAgent, inform);
 					inform.setContent("Turn");
 					
-					if (turn == 4){
+					if (turn == 12){
 						turn = 0;
 						//Tuer le bon nombre d'individus, en envoyant un message "Retraite"
 						AID[] agentsRetraite = Util.getMultipleRandomIndividu(myAgent, nombreSortants);
@@ -135,6 +148,10 @@ public class Horloge extends Agent {
 		for (int i = 0; i < nombreEntrants; i++){
 			try {
 				ContainerController container = getContainerController(); // get a container controller for creating new agents
+				parametresIndividus[3] = nivQualif.getAsInt();
+				parametresIndividus[4] = tempsLibre.getAsInt();
+				parametresIndividus[5] = revenu.getAsInt();
+				
 				container.createNewAgent("Individu"+dernierID, Individu.class.getName(), parametresIndividus).start();
 				dernierID++;
 			} catch (Exception any) {
