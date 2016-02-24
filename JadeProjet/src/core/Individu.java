@@ -228,8 +228,7 @@ public class Individu extends Agent {
 				}
 				envoyerRefusEmploi();
 			}
-			
-			
+
 			//Le revenu est suffisant et on accepte l'emploi.
 			else{
 				//Créer même message pour PoleEmploi et Employeur
@@ -286,6 +285,7 @@ public class Individu extends Agent {
 					compteMoisTLInsuffisant++;
 					if (compteMoisTLInsuffisant > x){
 						faireDemission();
+						compteMoisTLInsuffisant = 0;
 					}
 				}
 			}

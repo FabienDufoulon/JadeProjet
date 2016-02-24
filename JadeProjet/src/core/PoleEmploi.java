@@ -61,7 +61,7 @@ public class PoleEmploi extends Agent {
 	ArrayList<Double> proportionNiv2Temps;
 	ArrayList<Double> proportionNiv3Temps;
 	ArrayList<Double> revenuMinMoyenTemps;
-	int toursOutLim = 500;
+	int toursOutLim = 100;
 	int toursOut = 0;
 
 	
@@ -134,7 +134,7 @@ public class PoleEmploi extends Agent {
 							toursOut = 0;
 							System.out.println("Sortie fichier");
 							try{
-								FileWriter writer = new FileWriter("output.txt"); 
+								FileWriter writer = new FileWriter("Out/output.txt"); 
 								for(double d: tauxChomageTemps) {
 									String st = d + ";";
 									writer.write(st);

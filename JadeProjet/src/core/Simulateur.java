@@ -54,7 +54,7 @@ public class Simulateur {
 		individusDebut = 200;
 		individusEntrants = 2;
 		individusSortants = 2;
-		tempsTour = 500;
+		tempsTour = 250;
 		parametresHorloge = new Object[8];
 		parametresHorloge[0] = tempsTour;
 		parametresHorloge[1] = individusEntrants;
