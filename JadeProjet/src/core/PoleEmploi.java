@@ -1,7 +1,6 @@
 package core;
 
 import jade.core.Agent;
-
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.WakerBehaviour;
@@ -11,10 +10,6 @@ import jade.lang.acl.UnreadableException;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -55,6 +50,9 @@ public class PoleEmploi extends Agent {
 	/** Permet d'obtenir le temps libre moyen d'un individu. */
 	private HashMap<AID, Integer> tempsLibreMoyenIndividu;
 	
+	//Statistiques Gui
+	private StatistiquesGui statGui;
+	
 	//Sortie fichier
 	ArrayList<Double> tauxChomageTemps;
 	ArrayList<Double> proportionNiv1Temps;
@@ -92,6 +90,10 @@ public class PoleEmploi extends Agent {
 		proportionNiv2Temps = new ArrayList<Double>();
 		proportionNiv3Temps = new ArrayList<Double>();
 		revenuMinMoyenTemps = new ArrayList<Double>();
+		
+		// Create and show the GUI 
+		statGui = new StatistiquesGui(this);
+		statGui.showGui();
 	
 		//Ajout des comportements
 		addBehaviour(new AttenteMessage());
@@ -256,7 +258,7 @@ public class PoleEmploi extends Agent {
 	
 	
 	private void statistiques(){
-		//System.out.println("S");
+//		System.out.println("S");
 
 		int employes = Collections.frequency(statutIndividus.values(), StatutEmploye.Employe);
 		int rechercheEmplois = Collections.frequency(statutIndividus.values(), StatutEmploye.Chomage);
@@ -285,8 +287,13 @@ public class PoleEmploi extends Agent {
 		proportionNiv3Temps.add((double) proportionNiv3);
 		revenuMinMoyenTemps.add((double) revenuMinMoyen);
 		
-		
-		/*System.out.println(individus + " individus dans le système.");
+		//Statistiques Gui
+		statGui.updateData(toursOut, toursOutLim, individus, tauxChomage, employes,
+				nombreEmploisNonPourvus, nombreEmploisEnvoyes,
+				individusQualif1, individusQualif2, individusQualif3,
+				revenuMinMoyen, tempsLibreMinMoyen, revenuMoyenMoyen, tempsLibreMoyenMoyen);
+/*		
+		System.out.println(individus + " individus dans le système.");
 		
 		System.out.println(tauxChomage + " taux de chômage dans le système.");
 		//System.out.println(employes + " individus employes dans le système");
@@ -304,7 +311,7 @@ public class PoleEmploi extends Agent {
 		System.out.println(revenuMinMoyen + " revenu Min Moyen");	
 		System.out.println(tempsLibreMinMoyen + " temps Libre Min Moyen");	
 		System.out.println(revenuMoyenMoyen + " revenu Moyen Moyen");	
-		System.out.println(tempsLibreMoyenMoyen + " temps libre Moyen Moyen");	*/		
+		System.out.println(tempsLibreMoyenMoyen + " temps libre Moyen Moyen");			*/
 		
 		
 		
