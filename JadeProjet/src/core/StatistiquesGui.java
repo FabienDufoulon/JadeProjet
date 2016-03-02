@@ -2,10 +2,15 @@ package core;
 
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -13,6 +18,7 @@ import javax.swing.JTextField;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
+import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
@@ -37,6 +43,9 @@ public class StatistiquesGui extends JFrame{
 	private XYSeries proportionNiv3Series = new XYSeries("proportionNiv3");
 	
 	private XYSeries revenuMinMoyenSeries = new XYSeries("Revenu Min Moyen");
+	
+	JFreeChart tauxLineChart;
+	JFreeChart revenuLineChart;
 	
 	StatistiquesGui(PoleEmploi p){
 		super(p.getLocalName());
@@ -102,7 +111,7 @@ public class StatistiquesGui extends JFrame{
 		tauxDataset.addSeries(proportionNiv1Series);
 		tauxDataset.addSeries(proportionNiv2Series);
 		tauxDataset.addSeries(proportionNiv3Series);
-		JFreeChart tauxLineChart = ChartFactory.createXYLineChart(
+		tauxLineChart = ChartFactory.createXYLineChart(
 				"Taux de chômage dans le système",
 				"Mois","Taux",
 				tauxDataset,
@@ -110,18 +119,20 @@ public class StatistiquesGui extends JFrame{
 				true,true,false);
 		ChartPanel tauxChartPanel = new ChartPanel( tauxLineChart );
 		tauxChartPanel.setPreferredSize( new java.awt.Dimension( 1120 , 350 ) );
+		
+		/*
 		XYPlot plot = tauxLineChart.getXYPlot();
 		XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
 		for ( int i = 0; i < tauxDataset.getSeriesCount(); i++ ){
 			renderer.setSeriesStroke( i , new BasicStroke( 1.5f ) );
 		}
-		plot.setRenderer( renderer ); 
+		plot.setRenderer( renderer ); */
 		
 		getContentPane().add(tauxChartPanel, BorderLayout.SOUTH);
 		
 		// Graphe Revenu Min Moyen
 		revenuDataset.addSeries(revenuMinMoyenSeries);
-		JFreeChart revenuLineChart = ChartFactory.createXYLineChart(
+		revenuLineChart = ChartFactory.createXYLineChart(
 				"Revenu Min Moyen dans le système",
 				"Mois","Taux",
 				revenuDataset,
@@ -163,6 +174,29 @@ public class StatistiquesGui extends JFrame{
 		tempsLibreMoyenMoyenField.setText(""+tempsLibreMoyenMoyen);
 		
 		if ( toursOut >= (toursOutLim - 1) ) {
+			
+			// output graph
+			int width = 640; /* Width of the image */
+		    int height = 480; /* Height of the image */ 
+		    File tauxChart = new File( "Out/TauxLineChart.jpeg" ); 
+		    File revenuChart = new File( "Out/RevenuLineChart.jpeg" ); 
+		    try {
+				ChartUtilities.saveChartAsJPEG(tauxChart ,tauxLineChart, width ,height);
+				ChartUtilities.saveChartAsJPEG(revenuChart ,revenuLineChart, width ,height);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		    
+		    // output panel screen
+		    Container c = getContentPane();
+		    BufferedImage im = new BufferedImage(c.getWidth(), c.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		    c.paint(im.getGraphics());
+		    try {
+				ImageIO.write(im, "PNG", new File("Out/PanelShot.png"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
 			for ( int i = 0; i < tauxDataset.getSeriesCount(); i++ ){
 				tauxDataset.getSeries(i).clear();
 			}
