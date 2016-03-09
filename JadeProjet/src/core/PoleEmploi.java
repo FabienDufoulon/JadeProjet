@@ -126,6 +126,22 @@ public class PoleEmploi extends Agent {
 					}
 				}
 				
+				if (msg.getConversationId() != null && msg.getConversationId().startsWith("PublierEmploisEntreprise:")){
+					try {
+						Emploi emp = (Emploi)msg.getContentObject();
+						statutEmplois.put(emp, StatutEmploi.Disponible);
+						
+						String refEmploi = msg.getSender().getLocalName()+emp.getRefEmploi();
+						referencesEmplois.put(refEmploi, emp);
+						proposerEmploi(refEmploi);
+						
+						//HashMap<Emploi, Integer> 
+
+					} catch (UnreadableException e) {
+						e.printStackTrace();
+					}
+				}
+				
 				else {
 					String content = msg.getContent();
 					if (content.equals("Turn")){

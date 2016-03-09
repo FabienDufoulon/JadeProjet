@@ -22,6 +22,8 @@ public class Simulateur {
 	private int individusEntrants;
 	/** Nombre d'individus sortants de la simulation chaque année. */
 	private int individusSortants;
+	/** Nombre d'entreprises au début de la simulation. */
+	private int entreprisesDebut;
 	/** Temps que prend un tour dans la simulation */
 	private int tempsTour;
 	Object[] parametresHorloge;
@@ -49,11 +51,27 @@ public class Simulateur {
 	/** Arguments à donner à l'agent Etat */
 	Object[] parametresEtat;
 	
+	//Paramètres Entreprise
+	/** Production par individu par niveau de qualif */
+	int[] productionIndividuParQualif;
+	/** Demande moyen des entreprises */
+	int demandeMoyen;
+	/** Paramètre définissant le seuil d'emplois requis */
+	int seuilNiv1EmploisRequis;
+	int seuilNiv2EmploisRequis;
+	/** Arguments à donner à l'agent Entreprise */
+	Object[] parametresEntreprise;
+	/** Un emploi en CDD plus de k mois successifs automatiquement transformé en CDI */
+	int k;
+	/** Durée limitée dans le temps pour chaque offre d'emploi */
+	int dureeOffreEmploi;
+	
 	public Simulateur(){
 		//Paramètres simulateur
 		individusDebut = 200;
 		individusEntrants = 2;
 		individusSortants = 2;
+		entreprisesDebut = 10;
 		tempsTour = 250;
 		parametresHorloge = new Object[8];
 		parametresHorloge[0] = tempsTour;
@@ -89,6 +107,26 @@ public class Simulateur {
 			parametresEtat[3+i] = revenusParQualif[i];
 			parametresEtat[6+i] = tempsLibreParQualif[i];
 		}
+		
+		//Entreprise
+		demandeMoyen = 80;
+		productionIndividuParQualif = new int[]{1,2,3};
+		seuilNiv1EmploisRequis = 10;
+		seuilNiv2EmploisRequis = 5;
+		k = 12;
+		dureeOffreEmploi = 5;
+		
+		parametresEntreprise = new Object[14];
+		for (int i = 0; i < 3; i++){
+			parametresEntreprise[i] = productionIndividuParQualif[i];
+			parametresEntreprise[3+i] = revenusParQualif[i];
+			parametresEntreprise[6+i] = tempsLibreParQualif[i];
+		}
+		parametresEntreprise[9] = seuilNiv1EmploisRequis;
+		parametresEntreprise[10] = seuilNiv2EmploisRequis;
+		parametresEntreprise[11] = demandeMoyen;
+		parametresEntreprise[12] = k;
+		parametresEntreprise[13] = dureeOffreEmploi;
 	}
 	
 	/** Méthode à appeller une seule fois par test. Crée tous les agents initiaux, le reste est 
@@ -110,13 +148,18 @@ public class Simulateur {
 		IntSupplier _revenu = () -> UtilRandom.discreteNextGaussian(revenuMoyen, revenuMoyen/3, 1, revenuMoyen*2);
 		IntSupplier _nivQualif = () -> UtilRandom.discreteNextGaussian(niveauQualif, 1, 1, 3);		
 		
-		/*Lancement des agents */
+		/* Lancement des agents */
 		for (int i = 1; i <= individusDebut; i++){	
 			parametresIndividu[3] = _nivQualif.getAsInt();
 			parametresIndividu[4] = _tempsLibre.getAsInt();
 			parametresIndividu[5] = _revenu.getAsInt();
 			
 			mc.createNewAgent("Individu" + i, Individu.class.getName(), parametresIndividu).start();
+		}
+		
+		/* Lancement des entreprises */
+		for (int i = 1; i <= entreprisesDebut; i++){	
+			mc.createNewAgent("Entreprise" + i, Entreprise.class.getName(), parametresEntreprise).start();
 		}
 		
 		parametresHorloge[4] = parametresIndividu;
