@@ -126,7 +126,7 @@ public class PoleEmploi extends Agent {
 					}
 				}
 				
-				if (msg.getConversationId() != null && msg.getConversationId().startsWith("PublierEmploisEntreprise:")){
+				/*if (msg.getConversationId() != null && msg.getConversationId().startsWith("PublierEmploisEntreprise:")){
 					try {
 						Emploi emp = (Emploi)msg.getContentObject();
 						statutEmplois.put(emp, StatutEmploi.Disponible);
@@ -140,7 +140,7 @@ public class PoleEmploi extends Agent {
 					} catch (UnreadableException e) {
 						e.printStackTrace();
 					}
-				}
+				}*/
 				
 				else {
 					String content = msg.getContent();
@@ -284,9 +284,12 @@ public class PoleEmploi extends Agent {
 		//int nombreReferencesEmplois = referencesEmplois.size();
 		double tauxChomage = (double) rechercheEmplois / individus;
 		
-		int individusQualif1 = Collections.frequency(niveauQualificationsIndividus.values(), 1);
-		int individusQualif2 = Collections.frequency(niveauQualificationsIndividus.values(), 2);
-		int individusQualif3 = Collections.frequency(niveauQualificationsIndividus.values(), 3);
+		//int individusQualif1 = Collections.frequency(niveauQualificationsIndividus.values(), 1);
+		int individusQualif1 = Util.searchDF(this,"nivQualif1").length;
+		//int individusQualif2 = Collections.frequency(niveauQualificationsIndividus.values(), 2);
+		int individusQualif2 = Util.searchDF(this,"nivQualif2").length;
+		//int individusQualif3 = Collections.frequency(niveauQualificationsIndividus.values(), 3);
+		int individusQualif3 = Util.searchDF(this,"nivQualif3").length;
 		
 		double proportionNiv1 = (double) individusQualif1 / individus;
 		double proportionNiv2 = (double) individusQualif2 / individus;

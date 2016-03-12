@@ -114,7 +114,7 @@ public class Entreprise extends Agent {
 				}
 				
 				else if (content.startsWith("Demission:")){
-					TraiteReponseDemission(msg);
+					//TraiteReponseDemission(msg);
 				}
 				
 				else if (content.startsWith("EmploiAccepte:")){
@@ -159,16 +159,18 @@ public class Entreprise extends Agent {
 	/** Appelé quand AttenteMessage obtient un message de démission d'un emploi.
 	 *  Utilise la référence contenue dans le message pour mettre à null 
 	 *  l'individu dans l'emploi correspondant et publie "directement" l'emploi libéré. */
+	/*
 	private void TraiteReponseDemission(ACLMessage demission) {
 		//System.out.println("Reception Démission");
 		String [] content = demission.getContent().split(":");
-		Emploi emploiDemission = emplois.get(Integer.parseInt(content[1]));
+		Emploi emploiDemission = emplois.get(Integer.parseInt(content[1])); //Savoir si c'est un emploi CDD ou CDI
 		emploiDemission.setEmploye(null);
 		emploisLibres.add(emploiDemission);
 		
 		addBehaviour( new PublierEmplois());
-	}
+	}*/
 	
+	/*
 	private int[] optimisationDemandeProduction(int[] nombreEmploisSelonQualifCDD, int[] nombreEmploisSelonQualifCDI, demande) {
 		int production = prod1*nombreEmploisSelonQualif[0] + prod2*nombreEmploisSelonQualif[1] + prod3*nombreEmploisSelonQualif[2];
 		
@@ -253,5 +255,5 @@ public class Entreprise extends Agent {
 
 			production = prod1*nombre1 + prod2*nombre2 + prod3*nombre3;
 		}
-	}
+	}*/
 }

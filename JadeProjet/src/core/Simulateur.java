@@ -68,9 +68,9 @@ public class Simulateur {
 	
 	public Simulateur(){
 		//Paramètres simulateur
-		individusDebut = 200;
-		individusEntrants = 2;
-		individusSortants = 2;
+		individusDebut = 4;
+		individusEntrants = 0;
+		individusSortants = 0;
 		entreprisesDebut = 10;
 		tempsTour = 250;
 		parametresHorloge = new Object[8];
@@ -132,6 +132,49 @@ public class Simulateur {
 	/** Méthode à appeller une seule fois par test. Crée tous les agents initiaux, le reste est 
 	 *  géré par Horloge. */
 	public void commenceSimulation() throws StaleProxyException{
+		/*Creation du Runtime*/
+		Runtime rt = Runtime.instance();
+		rt.setCloseVM(true);
+		
+		/*Lancement de la plate-forme*/
+		Profile pMain = new ProfileImpl("localhost", 8888, null);
+		// La taille des search du DF étant limité à 100 sinon
+		String property_dx_maxresult = "10000";
+		pMain.setParameter("jade_domain_df_maxresult", property_dx_maxresult); 
+		//
+		AgentContainer mc = rt.createMainContainer(pMain);
+		
+		IntSupplier _tempsLibre = () -> UtilRandom.discreteNextGaussian(tempsLibreMoyen, tempsLibreMoyen/3, 1, tempsLibreMoyen*2);
+		IntSupplier _revenu = () -> UtilRandom.discreteNextGaussian(revenuMoyen, revenuMoyen/3, 1, revenuMoyen*2);
+		IntSupplier _nivQualif = () -> UtilRandom.discreteNextGaussian(niveauQualif, 1, 1, 3);		
+		
+		/* Lancement des agents */
+		for (int i = 1; i <= individusDebut; i++){	
+			parametresIndividu[3] = _nivQualif.getAsInt();
+			parametresIndividu[4] = _tempsLibre.getAsInt();
+			parametresIndividu[5] = _revenu.getAsInt();
+			
+			mc.createNewAgent("Individu" + i, Individu.class.getName(), parametresIndividu).start();
+			System.out.println(i);
+		}
+		
+		parametresHorloge[4] = parametresIndividu;
+		parametresHorloge[5] = _tempsLibre;
+		parametresHorloge[6] = _revenu;
+		parametresHorloge[7] = _nivQualif;
+		
+		mc.createNewAgent("Etat", Etat.class.getName(), parametresEtat).start();
+		mc.createNewAgent("PoleEmploi", PoleEmploi.class.getName(), null).start();
+		AgentController test = mc.createNewAgent("Horloge", Horloge.class.getName(), parametresHorloge);
+
+
+		test.start();
+		/*Ces deux dernières méthodes peuvent lancer l'exception*/
+	}
+	
+	/** Méthode à appeller une seule fois par test. Crée tous les agents initiaux, y compris des entreprises, le reste est 
+	 *  géré par Horloge. */
+	public void commenceSimulationAvecEntreprises() throws StaleProxyException{
 		/*Creation du Runtime*/
 		Runtime rt = Runtime.instance();
 		rt.setCloseVM(true);

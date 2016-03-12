@@ -104,7 +104,7 @@ public class Individu extends Agent {
 		
 		//System.out.println("Takedown Done");
 		//Dismissal message
-		//System.out.println("Individu-agent " + getAID().getName() + " terminating.");
+		System.out.println("Individu-agent " + getAID().getName() + " terminating.");
 	}
 	
 	/** Fonction qui enlève proprement un agent. Démission pour sa liaison avec les autres objets,

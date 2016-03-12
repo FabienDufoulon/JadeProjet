@@ -175,12 +175,15 @@ public class StatistiquesGui extends JFrame{
 		
 		if ( toursOut >= (toursOutLim - 1) ) {
 			
+			System.out.println("Printing out!");
+			
 			// output graph
 			int width = 640; /* Width of the image */
 		    int height = 480; /* Height of the image */ 
-		    File tauxChart = new File( "Out/TauxLineChart.jpeg" ); 
-		    File revenuChart = new File( "Out/RevenuLineChart.jpeg" ); 
+		    File tauxChart = new File( "Out\\TauxLineChart.jpeg" ); 
+		    File revenuChart = new File( "Out\\RevenuLineChart.jpeg" ); 
 		    try {
+		    	System.out.println("Printing chart!");
 				ChartUtilities.saveChartAsJPEG(tauxChart ,tauxLineChart, width ,height);
 				ChartUtilities.saveChartAsJPEG(revenuChart ,revenuLineChart, width ,height);
 			} catch (IOException e) {
@@ -192,7 +195,8 @@ public class StatistiquesGui extends JFrame{
 		    BufferedImage im = new BufferedImage(c.getWidth(), c.getHeight(), BufferedImage.TYPE_INT_ARGB);
 		    c.paint(im.getGraphics());
 		    try {
-				ImageIO.write(im, "PNG", new File("Out/PanelShot.png"));
+		    	System.out.println("Printing panel!");
+				ImageIO.write(im, "PNG", new File("Out\\PanelShot.png"));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
