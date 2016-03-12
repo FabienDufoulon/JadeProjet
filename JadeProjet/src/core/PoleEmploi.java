@@ -148,6 +148,7 @@ public class PoleEmploi extends Agent {
 						statistiques();
 						toursOut++;
 						
+						
 						if (toursOut >= toursOutLim){
 							toursOut = 0;
 							System.out.println("Sortie fichier");
@@ -186,6 +187,7 @@ public class PoleEmploi extends Agent {
 					}
 					else if (content.equals("EmploiRefuse")){
 						Emploi emploiRepropose = emploisEnvoyes.get(msg.getSender());
+						emploisEnvoyes.remove(msg.getSender());
 						statutEmplois.put(emploiRepropose, StatutEmploi.Disponible);
 						
 						String refEmploi = emploiRepropose.getEmployeur().getLocalName()+emploiRepropose.getRefEmploi();
@@ -224,15 +226,13 @@ public class PoleEmploi extends Agent {
 		//System.out.println("ProposeEmploi");
 		Emploi emploi = referencesEmplois.get(refEmploi);
 		
-		//Si tous les individus ont déjà reçu une proposition d'emploi?		
 		//Créer message
 		ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
 		inform.setConversationId("ProposeEmploi");
 		AID individuDestine = null;
 		
-		//if emploi null, normalement pas possible
 		individuDestine = Util.getRandomService(this, "nivQualif"+emploi.getNiveauQualificationNecessaire());
-		if (!emploisEnvoyes.containsKey(individuDestine)){
+		if (!emploisEnvoyes.containsKey(individuDestine) && individuDestine != null){
 			inform.addReceiver(individuDestine);
 			try {
 				inform.setContentObject(emploi);
@@ -261,7 +261,7 @@ public class PoleEmploi extends Agent {
 
 		public void action() {
 			myAgent.addBehaviour(
-				new WakerBehaviour(myAgent, 2000){
+				new WakerBehaviour(myAgent, 1000){
 					public void handleElapsedTimeout() { 
 						proposerEmploi(refEmploi);
 					}
@@ -284,12 +284,12 @@ public class PoleEmploi extends Agent {
 		//int nombreReferencesEmplois = referencesEmplois.size();
 		double tauxChomage = (double) rechercheEmplois / individus;
 		
-		//int individusQualif1 = Collections.frequency(niveauQualificationsIndividus.values(), 1);
-		int individusQualif1 = Util.searchDF(this,"nivQualif1").length;
-		//int individusQualif2 = Collections.frequency(niveauQualificationsIndividus.values(), 2);
-		int individusQualif2 = Util.searchDF(this,"nivQualif2").length;
-		//int individusQualif3 = Collections.frequency(niveauQualificationsIndividus.values(), 3);
-		int individusQualif3 = Util.searchDF(this,"nivQualif3").length;
+		int individusQualif1 = Collections.frequency(niveauQualificationsIndividus.values(), 1);
+		//int individusQualif1 = Util.searchDF(this,"nivQualif1").length;
+		int individusQualif2 = Collections.frequency(niveauQualificationsIndividus.values(), 2);
+		//int individusQualif2 = Util.searchDF(this,"nivQualif2").length;
+		int individusQualif3 = Collections.frequency(niveauQualificationsIndividus.values(), 3);
+		//int individusQualif3 = Util.searchDF(this,"nivQualif3").length;
 		
 		double proportionNiv1 = (double) individusQualif1 / individus;
 		double proportionNiv2 = (double) individusQualif2 / individus;

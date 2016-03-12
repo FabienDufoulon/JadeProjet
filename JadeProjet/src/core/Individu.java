@@ -52,7 +52,7 @@ public class Individu extends Agent {
 	/** Agent init */
 	protected void setup() {
 		// Printout a welcome message
-		//System.out.println("Hello! Individu-agent"+ getAID().getName()+ " is ready.");
+		System.out.println("Hello! Individu-agent"+ getAID().getName()+ " is ready.");
 		
 		compteOffresConsecutives = 0;
 		compteMoisTLInsuffisant = 0;
@@ -128,6 +128,7 @@ public class Individu extends Agent {
 	/** Fonction pour faire tous les détails liés à la démission. */
 	private void faireDemission(){
 		if (emploiCourant != null){
+			System.out.println("Demission");
 			AID employeur = emploiCourant.getEmployeur();
 			
 			//Créer message Demission pour Employeur et PoleEmploi
@@ -160,6 +161,7 @@ public class Individu extends Agent {
 		public void action() {
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
 			ACLMessage msg = myAgent.receive(mt);
+			
 			if (msg != null) {
 				
 				//On vérifie si le message n'est pas une proposition d'emploi d'abord
@@ -167,6 +169,7 @@ public class Individu extends Agent {
 				if (msg.getConversationId() != null && msg.getConversationId().equals("ProposeEmploi")){
 					//System.out.println("RecoitEmploi");
 					if (statut == StatutIndividu.Chomage){
+						System.out.println("Etudier");
 						etudierEmploi(msg);
 					}
 					else{
@@ -226,11 +229,13 @@ public class Individu extends Agent {
 				else{
 					compteOffresConsecutives++;
 				}
+				System.out.println("RefusEmploi");
 				envoyerRefusEmploi();
 			}
 
 			//Le revenu est suffisant et on accepte l'emploi.
 			else{
+				System.out.println("Emploi accepté");
 				//Créer même message pour PoleEmploi et Employeur
 				ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
 				inform.addReceiver(content.getEmployeur());
@@ -270,7 +275,7 @@ public class Individu extends Agent {
 	private class VieEmploye extends OneShotBehaviour {
 
 		public void action() {
-			if (emploiCourant == null) System.out.println("Gros problème ! Employé sans emploi correct.");
+			if (emploiCourant == null || statut == StatutIndividu.Chomage) System.out.println("Gros problème ! Employé sans emploi correct.");
 			else{
 				int tempsLibreTour = emploiCourant.getTempsLibre();
 				int revenuTour = emploiCourant.getRevenu();
