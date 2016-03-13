@@ -216,12 +216,14 @@ public class PoleEmploi extends Agent {
 						
 					}
 					else if (content.equals("Retraite")){
+						//System.out.println("S " + statutIndividus.size());
 						statutIndividus.remove(msg.getSender());
 						niveauQualificationsIndividus.remove(msg.getSender());
 						tempsLibreMinIndividu.remove(msg.getSender());
 						revenuMinIndividu.remove(msg.getSender());
 						tempsLibreMoyenIndividu.remove(msg.getSender());
 						revenuMoyenIndividu.remove(msg.getSender());
+						//System.out.println("E " + statutIndividus.size());
 					}
 					else if (content.startsWith("InformationTour")){
 						String[] split = msg.getContent().split(":");
@@ -332,7 +334,7 @@ public class PoleEmploi extends Agent {
 		revenuMinMoyenTemps.add((double) revenuMinMoyen);
 		
 		//Statistiques Gui
-		statGui.updateData(toursOut, toursOutLim, individus, tauxChomage, employes,
+		statGui.updateData(toursOut, toursOutLim, individus, tauxChomage, employes, rechercheEmplois,
 				nombreEmploisNonPourvus, nombreEmploisEnvoyes,
 				individusQualif1, individusQualif2, individusQualif3,
 				refusParTourPersonnes, demissionParTourPersonnes,

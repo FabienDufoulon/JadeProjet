@@ -89,7 +89,9 @@ public class Horloge extends Agent {
 							informRetraite.addReceiver(agentsRetraite[i]);
 							informRetraite.setContent("Retraite");
 							myAgent.send(informRetraite);
+							//System.out.println("Retraite");
 							
+							//Ne pas envoyer le message "tour" à un agent qui part à la retraite
 							inform.removeReceiver(agentsRetraite[i]);
 						}
 						

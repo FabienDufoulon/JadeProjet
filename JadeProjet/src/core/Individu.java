@@ -99,8 +99,9 @@ public class Individu extends Agent {
 	/** Agent clean-up */
 	protected void takeDown(){
 		//Deregister from DF
+		/*
 		try { DFService.deregister(this); }
-        catch (Exception e) {System.out.println("Exception Takedown");}
+        catch (Exception e) {System.out.println("Exception Takedown");}*/
 		
 		//System.out.println("Takedown Done");
 		//Dismissal message
@@ -113,13 +114,19 @@ public class Individu extends Agent {
 	private void retire(){
 		//System.out.println("Retire");
 		//Demission de l'emploi.
-		faireDemission();
+		AID employeur = emploiCourant.getEmployeur();
+		
+		//Créer message Demission pour Employeur et PoleEmploi
+		ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+		inform.addReceiver(employeur);
+		inform.setContent("Demission:" + emploiCourant.getRefEmploi());
+		send(inform);
 		
 		//Envoyer message retraite à Pole Emploi
-		ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
-		inform.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
-		inform.setContent("Retraite");
-		send(inform);
+		ACLMessage informRetraite = new ACLMessage(ACLMessage.INFORM);
+		informRetraite.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
+		informRetraite.setContent("Retraite");
+		send(informRetraite);
 		
 		//System.out.println("Before Takedown");
 		takeDown();
@@ -169,7 +176,7 @@ public class Individu extends Agent {
 				if (msg.getConversationId() != null && msg.getConversationId().equals("ProposeEmploi")){
 					//System.out.println("RecoitEmploi");
 					if (statut == StatutIndividu.Chomage){
-						System.out.println("Etudier");
+						//System.out.println("Etudier");
 						etudierEmploi(msg);
 					}
 					else{
@@ -229,13 +236,13 @@ public class Individu extends Agent {
 				else{
 					compteOffresConsecutives++;
 				}
-				System.out.println("RefusEmploi");
+				//System.out.println("RefusEmploi");
 				envoyerRefusEmploi();
 			}
 
 			//Le revenu est suffisant et on accepte l'emploi.
 			else{
-				System.out.println("Emploi accepté");
+				//System.out.println("Emploi accepté");
 				//Créer même message pour PoleEmploi et Employeur
 				ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
 				inform.addReceiver(content.getEmployeur());

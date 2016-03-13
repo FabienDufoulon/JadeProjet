@@ -30,8 +30,8 @@ public class StatistiquesGui extends JFrame{
 	private PoleEmploi poleEmploi;
 	
 	private JTextField individusField, tauxChomageField, 
-	                   emploisPercusField, emploisNonPourvusField, emploisEnvoyesField,
-	                   individusQualif1Field, individusQualif2Field, individusQualif3Field,
+					   repartitionIndividusField, emploisNonPourvusField, emploisEnvoyesField,
+	                   individusQualifField, 
 	                   refusParTourField, demissionParTourField,
 	                   revenuMinMoyenField, tempsLibreMinMoyenField, revenuMoyenMoyenField, tempsLibreMoyenMoyenField;
 	
@@ -65,9 +65,9 @@ public class StatistiquesGui extends JFrame{
 		tauxChomageField = new JTextField(10);
 		panel.add(tauxChomageField);
 		
-		panel.add(new JLabel("Nombre d'emplois perçus par Pôle Emploi en tout:"));
-		emploisPercusField = new JTextField(10);
-		panel.add(emploisPercusField);
+		panel.add(new JLabel("Répartition des individus (Employé, Chômage):"));
+		repartitionIndividusField = new JTextField(10);
+		panel.add(repartitionIndividusField);
 		
 		panel.add(new JLabel("NombreEmploisNonPourvus dans le système:"));
 		emploisNonPourvusField = new JTextField(10);
@@ -77,22 +77,9 @@ public class StatistiquesGui extends JFrame{
 		emploisEnvoyesField = new JTextField(10);
 		panel.add(emploisEnvoyesField);
 		
-		/*
-		panel.add(new JLabel("Individus de niveau 1:"));
-		individusQualif1Field = new JTextField(10);
-		panel.add(individusQualif1Field);
-		
-		panel.add(new JLabel("Individus de niveau 2:"));
-		individusQualif2Field = new JTextField(10);
-		panel.add(individusQualif2Field);
-		
-		panel.add(new JLabel("Individus de niveau 3:"));
-		individusQualif3Field = new JTextField(10);
-		panel.add(individusQualif3Field);*/
-		
 		panel.add(new JLabel("Individus(1,2,3):"));
-		individusQualif1Field = new JTextField(10);
-		panel.add(individusQualif1Field);
+		individusQualifField = new JTextField(10);
+		panel.add(individusQualifField);
 		
 		panel.add(new JLabel("Refus / tour (pers):"));
 		refusParTourField = new JTextField(10);
@@ -168,7 +155,7 @@ public class StatistiquesGui extends JFrame{
 	}
 	
 	public void updateData(int toursOut, int toursOutLim,
-			               int individus, double tauxChomage, int employes, 
+			               int individus, double tauxChomage, int employes, int rechercheEmplois, 
 			               int nombreEmploisNonPourvus, int nombreEmploisEnvoyes,
 			               int individusQualif1, int individusQualif2, int individusQualif3,
 			               int refusParTour, int demissionParTour, //Personnes
@@ -177,10 +164,10 @@ public class StatistiquesGui extends JFrame{
 		
 		individusField.setText(""+individus);
 		tauxChomageField.setText(""+tauxChomage);
-		emploisPercusField.setText(employes+nombreEmploisNonPourvus+"");
+		repartitionIndividusField.setText(employes +" , " + rechercheEmplois);
 		emploisNonPourvusField.setText(""+nombreEmploisNonPourvus);
 		emploisEnvoyesField.setText(""+nombreEmploisEnvoyes);
-		individusQualif1Field.setText(""+individusQualif1+","+individusQualif2+","+individusQualif3);
+		individusQualifField.setText(""+individusQualif1+","+individusQualif2+","+individusQualif3);
 		/*individusQualif2Field.setText(""+individusQualif2);
 		individusQualif3Field.setText(""+individusQualif3);*/
 		refusParTourField.setText(""+refusParTour);
