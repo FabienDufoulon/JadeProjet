@@ -52,7 +52,7 @@ public class Individu extends Agent {
 	/** Agent init */
 	protected void setup() {
 		// Printout a welcome message
-		System.out.println("Hello! Individu-agent"+ getAID().getName()+ " is ready.");
+		//System.out.println("Hello! Individu-agent"+ getAID().getName()+ " is ready.");
 		
 		compteOffresConsecutives = 0;
 		compteMoisTLInsuffisant = 0;
@@ -104,7 +104,7 @@ public class Individu extends Agent {
 		
 		//System.out.println("Takedown Done");
 		//Dismissal message
-		System.out.println("Individu-agent " + getAID().getName() + " terminating.");
+		//System.out.println("Individu-agent " + getAID().getName() + " terminating.");
 	}
 	
 	/** Fonction qui enlève proprement un agent. Démission pour sa liaison avec les autres objets,

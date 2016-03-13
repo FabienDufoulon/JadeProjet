@@ -181,6 +181,7 @@ public class PoleEmploi extends Agent {
 						
 						String[] split = msg.getContent().split(":");
 						niveauQualificationsIndividus.put(msg.getSender(), Integer.parseInt(split[1]));
+						System.out.println("Inscription de : " + msg.getSender() + " au niveau : " + Integer.parseInt(split[1]));
 					}
 					else if (content.startsWith("Demission")){
 						statutIndividus.put(msg.getSender(), StatutEmploye.Chomage);

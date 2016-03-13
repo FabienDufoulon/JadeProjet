@@ -68,11 +68,11 @@ public class Simulateur {
 	
 	public Simulateur(){
 		//Paramètres simulateur
-		individusDebut = 2;
+		individusDebut = 50;
 		individusEntrants = 0;
 		individusSortants = 0;
 		entreprisesDebut = 10;
-		tempsTour = 1000;
+		tempsTour = 250;
 		parametresHorloge = new Object[8];
 		parametresHorloge[0] = tempsTour;
 		parametresHorloge[1] = individusEntrants;
@@ -97,9 +97,9 @@ public class Simulateur {
 		
 		
 		//Etat
-		emploisParQualif = new int[]{5,5,5};
-		revenusParQualif = new int[]{1800,2000,2200};
-		tempsLibreParQualif = new int[]{100,100,100};
+		emploisParQualif = new int[]{50,50,50};
+		revenusParQualif = new int[]{2200,2200,2200};
+		tempsLibreParQualif = new int[]{1500,1500,1500};
 		
 		parametresEtat = new Object[9];
 		for (int i = 0; i < 3; i++){
@@ -131,7 +131,7 @@ public class Simulateur {
 	
 	/** Méthode à appeller une seule fois par test. Crée tous les agents initiaux, le reste est 
 	 *  géré par Horloge. */
-	public void commenceSimulation() throws StaleProxyException{
+	public AgentContainer commenceSimulation() throws StaleProxyException{
 		/*Creation du Runtime*/
 		Runtime rt = Runtime.instance();
 		rt.setCloseVM(true);
@@ -148,6 +148,12 @@ public class Simulateur {
 		IntSupplier _revenu = () -> UtilRandom.discreteNextGaussian(revenuMoyen, revenuMoyen/3, 1, revenuMoyen*2);
 		IntSupplier _nivQualif = () -> UtilRandom.discreteNextGaussian(niveauQualif, 1, 1, 3);		
 		
+		//Ordre probablement important pour la création des agents
+		mc.createNewAgent("PoleEmploi", PoleEmploi.class.getName(), null).start();
+		
+		
+		mc.createNewAgent("Etat", Etat.class.getName(), parametresEtat).start();
+		
 		/* Lancement des agents */
 		for (int i = 1; i <= individusDebut; i++){	
 			parametresIndividu[3] = _nivQualif.getAsInt();
@@ -155,7 +161,6 @@ public class Simulateur {
 			parametresIndividu[5] = _revenu.getAsInt();
 			
 			mc.createNewAgent("Individu" + i, Individu.class.getName(), parametresIndividu).start();
-			System.out.println(i);
 		}
 		
 		parametresHorloge[4] = parametresIndividu;
@@ -163,60 +168,23 @@ public class Simulateur {
 		parametresHorloge[6] = _revenu;
 		parametresHorloge[7] = _nivQualif;
 		
-		mc.createNewAgent("Etat", Etat.class.getName(), parametresEtat).start();
-		mc.createNewAgent("PoleEmploi", PoleEmploi.class.getName(), null).start();
 		AgentController test = mc.createNewAgent("Horloge", Horloge.class.getName(), parametresHorloge);
 
 
 		test.start();
-		/*Ces deux dernières méthodes peuvent lancer l'exception*/
+		
+		return mc;
 	}
 	
 	/** Méthode à appeller une seule fois par test. Crée tous les agents initiaux, y compris des entreprises, le reste est 
 	 *  géré par Horloge. */
 	public void commenceSimulationAvecEntreprises() throws StaleProxyException{
-		/*Creation du Runtime*/
-		Runtime rt = Runtime.instance();
-		rt.setCloseVM(true);
-		
-		/*Lancement de la plate-forme*/
-		Profile pMain = new ProfileImpl("localhost", 8888, null);
-		// La taille des search du DF étant limité à 100 sinon
-		String property_dx_maxresult = "10000";
-		pMain.setParameter("jade_domain_df_maxresult", property_dx_maxresult); 
-		//
-		AgentContainer mc = rt.createMainContainer(pMain);
-		
-		IntSupplier _tempsLibre = () -> UtilRandom.discreteNextGaussian(tempsLibreMoyen, tempsLibreMoyen/3, 1, tempsLibreMoyen*2);
-		IntSupplier _revenu = () -> UtilRandom.discreteNextGaussian(revenuMoyen, revenuMoyen/3, 1, revenuMoyen*2);
-		IntSupplier _nivQualif = () -> UtilRandom.discreteNextGaussian(niveauQualif, 1, 1, 3);		
-		
-		/* Lancement des agents */
-		for (int i = 1; i <= individusDebut; i++){	
-			parametresIndividu[3] = _nivQualif.getAsInt();
-			parametresIndividu[4] = _tempsLibre.getAsInt();
-			parametresIndividu[5] = _revenu.getAsInt();
-			
-			mc.createNewAgent("Individu" + i, Individu.class.getName(), parametresIndividu).start();
-		}
+		AgentContainer mc = commenceSimulation();
 		
 		/* Lancement des entreprises */
 		for (int i = 1; i <= entreprisesDebut; i++){	
 			mc.createNewAgent("Entreprise" + i, Entreprise.class.getName(), parametresEntreprise).start();
 		}
-		
-		parametresHorloge[4] = parametresIndividu;
-		parametresHorloge[5] = _tempsLibre;
-		parametresHorloge[6] = _revenu;
-		parametresHorloge[7] = _nivQualif;
-		
-		mc.createNewAgent("Etat", Etat.class.getName(), parametresEtat).start();
-		mc.createNewAgent("PoleEmploi", PoleEmploi.class.getName(), null).start();
-		AgentController test = mc.createNewAgent("Horloge", Horloge.class.getName(), parametresHorloge);
-
-
-		test.start();
-		/*Ces deux dernières méthodes peuvent lancer l'exception*/
 	}
 
 }
