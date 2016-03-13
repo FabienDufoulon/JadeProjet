@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import jade.core.AID;
 
@@ -50,6 +51,12 @@ public class PoleEmploi extends Agent {
 	/** Permet d'obtenir le temps libre moyen d'un individu. */
 	private HashMap<AID, Integer> tempsLibreMoyenIndividu;
 	
+	/** Permet de compter le nombre de personnes qui ont choisis de démissionner par tour, et le nombre de fois qu'ils l'ont fait */
+	private HashMap<AID, Integer> demissionParTour;
+	/** Permet de compter le nombre de personnes qui ont refusé un emploi par tour, et le nombre de fois qu'ils l'ont fait */
+	private HashMap<AID, Integer> refusParTour;
+	
+	
 	//Statistiques Gui
 	private StatistiquesGui statGui;
 	
@@ -83,6 +90,8 @@ public class PoleEmploi extends Agent {
 		tempsLibreMinIndividu = new HashMap<AID, Integer>();
 		revenuMoyenIndividu = new HashMap<AID, Integer>();
 		tempsLibreMoyenIndividu = new HashMap<AID, Integer>();
+		demissionParTour = new HashMap<AID, Integer>();
+		refusParTour = new HashMap<AID, Integer>();
 
 		//Sortie fichier
 		tauxChomageTemps = new ArrayList<Double>();
@@ -148,6 +157,9 @@ public class PoleEmploi extends Agent {
 						statistiques();
 						toursOut++;
 						
+						demissionParTour.clear();
+						refusParTour.clear();
+						
 						
 						if (toursOut >= toursOutLim){
 							toursOut = 0;
@@ -181,18 +193,27 @@ public class PoleEmploi extends Agent {
 						
 						String[] split = msg.getContent().split(":");
 						niveauQualificationsIndividus.put(msg.getSender(), Integer.parseInt(split[1]));
-						System.out.println("Inscription de : " + msg.getSender() + " au niveau : " + Integer.parseInt(split[1]));
 					}
 					else if (content.startsWith("Demission")){
-						statutIndividus.put(msg.getSender(), StatutEmploye.Chomage);
+						AID senderAID = msg.getSender();
+						statutIndividus.put(senderAID, StatutEmploye.Chomage);
+						
+						//Statistique
+						demissionParTour.put(senderAID, demissionParTour.containsKey(senderAID) ? demissionParTour.get(senderAID)+1 : 1);
 					}
 					else if (content.equals("EmploiRefuse")){
-						Emploi emploiRepropose = emploisEnvoyes.get(msg.getSender());
-						emploisEnvoyes.remove(msg.getSender());
+						AID senderAID = msg.getSender();
+						Emploi emploiRepropose = emploisEnvoyes.get(senderAID);
+						emploisEnvoyes.remove(senderAID);
 						statutEmplois.put(emploiRepropose, StatutEmploi.Disponible);
+						
+						//Statistique
+						refusParTour.put(senderAID, refusParTour.containsKey(senderAID) ? refusParTour.get(senderAID)+1 : 1);
+						//
 						
 						String refEmploi = emploiRepropose.getEmployeur().getLocalName()+emploiRepropose.getRefEmploi();
 						proposerEmploi(refEmploi);
+						
 					}
 					else if (content.equals("Retraite")){
 						statutIndividus.remove(msg.getSender());
@@ -296,6 +317,9 @@ public class PoleEmploi extends Agent {
 		double proportionNiv2 = (double) individusQualif2 / individus;
 		double proportionNiv3 = (double) individusQualif3 / individus;
 		
+		int refusParTourPersonnes = refusParTour.size();
+		int demissionParTourPersonnes = demissionParTour.size();
+		
 		int revenuMinMoyen = average(revenuMinIndividu.values());
 		int tempsLibreMinMoyen = average(tempsLibreMinIndividu.values());
 		int revenuMoyenMoyen = average(revenuMoyenIndividu.values());
@@ -311,6 +335,7 @@ public class PoleEmploi extends Agent {
 		statGui.updateData(toursOut, toursOutLim, individus, tauxChomage, employes,
 				nombreEmploisNonPourvus, nombreEmploisEnvoyes,
 				individusQualif1, individusQualif2, individusQualif3,
+				refusParTourPersonnes, demissionParTourPersonnes,
 				revenuMinMoyen, tempsLibreMinMoyen, revenuMoyenMoyen, tempsLibreMoyenMoyen);
 /*		
 		System.out.println(individus + " individus dans le système.");

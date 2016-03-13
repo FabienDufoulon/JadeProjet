@@ -32,6 +32,7 @@ public class StatistiquesGui extends JFrame{
 	private JTextField individusField, tauxChomageField, 
 	                   emploisPercusField, emploisNonPourvusField, emploisEnvoyesField,
 	                   individusQualif1Field, individusQualif2Field, individusQualif3Field,
+	                   refusParTourField, demissionParTourField,
 	                   revenuMinMoyenField, tempsLibreMinMoyenField, revenuMoyenMoyenField, tempsLibreMoyenMoyenField;
 	
 	private XYSeriesCollection tauxDataset = new XYSeriesCollection();
@@ -76,6 +77,7 @@ public class StatistiquesGui extends JFrame{
 		emploisEnvoyesField = new JTextField(10);
 		panel.add(emploisEnvoyesField);
 		
+		/*
 		panel.add(new JLabel("Individus de niveau 1:"));
 		individusQualif1Field = new JTextField(10);
 		panel.add(individusQualif1Field);
@@ -86,7 +88,19 @@ public class StatistiquesGui extends JFrame{
 		
 		panel.add(new JLabel("Individus de niveau 3:"));
 		individusQualif3Field = new JTextField(10);
-		panel.add(individusQualif3Field);
+		panel.add(individusQualif3Field);*/
+		
+		panel.add(new JLabel("Individus(1,2,3):"));
+		individusQualif1Field = new JTextField(10);
+		panel.add(individusQualif1Field);
+		
+		panel.add(new JLabel("Refus / tour (pers):"));
+		refusParTourField = new JTextField(10);
+		panel.add(refusParTourField);
+		
+		panel.add(new JLabel("Demission / tour (pers):"));
+		demissionParTourField = new JTextField(10);
+		panel.add(demissionParTourField);
 		
 		panel.add(new JLabel("Revenu Min Moyen:"));
 		revenuMinMoyenField = new JTextField(10);
@@ -157,6 +171,7 @@ public class StatistiquesGui extends JFrame{
 			               int individus, double tauxChomage, int employes, 
 			               int nombreEmploisNonPourvus, int nombreEmploisEnvoyes,
 			               int individusQualif1, int individusQualif2, int individusQualif3,
+			               int refusParTour, int demissionParTour, //Personnes
 			               int revenuMinMoyen, int tempsLibreMinMoyen, 
 			               int revenuMoyenMoyen, int tempsLibreMoyenMoyen) {
 		
@@ -165,9 +180,11 @@ public class StatistiquesGui extends JFrame{
 		emploisPercusField.setText(employes+nombreEmploisNonPourvus+"");
 		emploisNonPourvusField.setText(""+nombreEmploisNonPourvus);
 		emploisEnvoyesField.setText(""+nombreEmploisEnvoyes);
-		individusQualif1Field.setText(""+individusQualif1);
-		individusQualif2Field.setText(""+individusQualif2);
-		individusQualif3Field.setText(""+individusQualif3);
+		individusQualif1Field.setText(""+individusQualif1+","+individusQualif2+","+individusQualif3);
+		/*individusQualif2Field.setText(""+individusQualif2);
+		individusQualif3Field.setText(""+individusQualif3);*/
+		refusParTourField.setText(""+refusParTour);
+		demissionParTourField.setText(""+demissionParTour);
 		revenuMinMoyenField.setText(""+revenuMinMoyen);
 		tempsLibreMinMoyenField.setText(""+tempsLibreMinMoyen);
 		revenuMoyenMoyenField.setText(""+revenuMoyenMoyen);
