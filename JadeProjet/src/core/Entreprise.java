@@ -210,7 +210,7 @@ public class Entreprise extends Agent {
 				}
 				
 				else if (content.startsWith("Demission:")){
-					//TraiteReponseDemission(msg);
+					TraiteReponseDemission(msg);
 				}
 				
 				else if (content.startsWith("EmploiAccepte:")){
@@ -249,26 +249,41 @@ public class Entreprise extends Agent {
 	private void TraiteReponseEmploi(ACLMessage rempli) {
 		//System.out.println("Reception réponse emploi");
 		String [] content = rempli.getContent().split(":");
-		emplois.get(Integer.parseInt(content[1])).setEmploye(rempli.getSender());
-		emploisCDD.put(Integer.parseInt(content[1]), emplois.get(Integer.parseInt(content[1])));
+		Emploi emploiAccepte = emplois.get(Integer.parseInt(content[1]));
+		emploiAccepte.setEmploye(rempli.getSender());
+		
+		// Change infos
+		emploisCDD.put(Integer.parseInt(content[1]), emploiAccepte);
 		emploisCDDTempsDepuisAccepte.put(Integer.parseInt(content[1]), k);
-		nombreEmploisSelonQualifCDD[emplois.get(Integer.parseInt(content[1])).getNiveauQualificationNecessaire()-1]++;
-		nombreEmploisSelonQualif[emplois.get(Integer.parseInt(content[1])).getNiveauQualificationNecessaire()-1]++;
+		nombreEmploisSelonQualifCDD[emploiAccepte.getNiveauQualificationNecessaire()-1]++;
+		nombreEmploisSelonQualif[emploiAccepte.getNiveauQualificationNecessaire()-1]++;
 	}
 	
 	/** Appelé quand AttenteMessage obtient un message de démission d'un emploi.
 	 *  Utilise la référence contenue dans le message pour mettre à null 
 	 *  l'individu dans l'emploi correspondant et publie "directement" l'emploi libéré. */
-	/*
 	private void TraiteReponseDemission(ACLMessage demission) {
 		//System.out.println("Reception Démission");
 		String [] content = demission.getContent().split(":");
 		Emploi emploiDemission = emplois.get(Integer.parseInt(content[1])); //Savoir si c'est un emploi CDD ou CDI
 		emploiDemission.setEmploye(null);
+		
+		// Change infos
+		if (emploisCDI.containsKey(Integer.parseInt(content[1]))) {
+			emploisCDI.remove(Integer.parseInt(content[1]));
+			nombreEmploisSelonQualifCDI[emploiDemission.getNiveauQualificationNecessaire()-1]--;
+		}
+		else {
+			emploisCDD.remove(Integer.parseInt(content[1]));
+			emploisCDDTempsDepuisAccepte.remove(Integer.parseInt(content[1]));
+			nombreEmploisSelonQualifCDD[emploiDemission.getNiveauQualificationNecessaire()-1]--;
+		}
+		nombreEmploisSelonQualif[emploiDemission.getNiveauQualificationNecessaire()-1]--;
+		
 		emploisLibres.add(emploiDemission);
 		
 		addBehaviour( new PublierEmplois());
-	}*/
+	}
 	
 	
 	private int[] optimisationDemandeProduction(int demande) {
