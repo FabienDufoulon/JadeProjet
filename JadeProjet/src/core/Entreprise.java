@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.function.IntSupplier;
 
 /**
@@ -42,6 +43,8 @@ public class Entreprise extends Agent {
 	int[] nombreEmploisSelonQualifCDI;
 	int[] nombreEmploisSelonQualifCDD;
 	int[] prodParQualif;
+	int[] revenuParQualif;
+	int[] tempsLibreMoyenParQualif;
 	int demandeMoyen;
 	int seuil1;
 	int seuil2;
@@ -68,6 +71,8 @@ public class Entreprise extends Agent {
 		if(args != null && args.length >= 14){
 			for (int nivQualif = 1; nivQualif <= 3; nivQualif++){
 				prodParQualif[nivQualif-1] = (int) args[nivQualif-1];
+				revenuParQualif[nivQualif-1] = (int) args[3 + nivQualif-1];
+				tempsLibreMoyenParQualif[nivQualif-1] = (int) args[6 + nivQualif-1];
 			}
 			seuil1 = (int)args[9];
 			seuil2 = (int)args[10];
@@ -81,12 +86,12 @@ public class Entreprise extends Agent {
 			// Optimisation
 			int[] changeNombreEmploye = optimisationDemandeProduction(_demande.getAsInt());
 					
-			// creation emplois
+			// creation offre d'emplois
 			for (int nivQualif = 1; nivQualif <= 3; nivQualif++){
 				//Paramètres pour chaque niveau de qualification
-				int nombreEmplois = (int) changeNombreEmploye[nivQualif-1];
-				int revenu = (int) args[3 + nivQualif-1];
-				int tempsLibreMoyen = (int) args[6 + nivQualif-1];
+				int nombreEmplois = changeNombreEmploye[nivQualif-1];
+				int revenu = revenuParQualif[nivQualif-1];
+				int tempsLibreMoyen = tempsLibreMoyenParQualif[nivQualif-1];
 				
 				for(int i = 0; i < nombreEmplois; i++){
 					//Faire une loi normale ici pour le revenu
@@ -98,9 +103,6 @@ public class Entreprise extends Agent {
 					
 					Emploi temp = new Emploi(getAID(), nivQualif, _tempsLibre, _revenu, derniereReferenceEmploi);
 					emplois.put(derniereReferenceEmploi, temp);
-					emploisCDD.put(derniereReferenceEmploi, temp);
-					nombreEmploisSelonQualifCDD[nivQualif-1]++;
-					nombreEmploisSelonQualif[nivQualif-1]++;
 					emploisLibres.add(temp);
 					derniereReferenceEmploi++;
 				}
@@ -133,7 +135,78 @@ public class Entreprise extends Agent {
 				
 				String content = msg.getContent();
 				if (content.equals("Turn")){
-					//System.out.println("Etat starting turn");
+					
+					// Transformer CDD en CDI si k mois successifs
+					ArrayList<Integer> refEmploiTransforme = new ArrayList<Integer>();
+					for ( Entry<Integer, Integer> dureeEmploiCDD : emploisCDDTempsDepuisAccepte.entrySet() ) {
+						dureeEmploiCDD.setValue(dureeEmploiCDD.getValue()-1);
+						if (dureeEmploiCDD.getValue() < 0) {
+							// Transformer ce CDD en CDI
+							emploisCDI.put(dureeEmploiCDD.getKey(), emplois.get(dureeEmploiCDD.getKey()));
+							emploisCDD.remove(dureeEmploiCDD.getKey());
+							nombreEmploisSelonQualifCDI[emplois.get(dureeEmploiCDD.getKey()).getNiveauQualificationNecessaire()-1]++;
+							nombreEmploisSelonQualifCDD[emplois.get(dureeEmploiCDD.getKey()).getNiveauQualificationNecessaire()-1]--;
+							refEmploiTransforme.add(dureeEmploiCDD.getKey());
+						}
+					}
+					for (int i = 0; i < refEmploiTransforme.size(); i++) {
+						emploisCDDTempsDepuisAccepte.remove(refEmploiTransforme.get(i));
+					}
+					
+					// Optimisation
+					IntSupplier _demande = (IntSupplier & Serializable)() 
+							-> UtilRandom.discreteNextGaussian(demandeMoyen, demandeMoyen/3, 1, demandeMoyen*2);
+					int[] changeNombreEmploye = optimisationDemandeProduction(_demande.getAsInt());
+									
+					// creation offre d'emplois ou suppresion emplois
+					for (int nivQualif = 1; nivQualif <= 3; nivQualif++){
+						//Paramètres pour chaque niveau de qualification
+						int nombreEmplois = changeNombreEmploye[nivQualif-1];
+						int revenu = revenuParQualif[nivQualif-1];
+						int tempsLibreMoyen = tempsLibreMoyenParQualif[nivQualif-1];
+						
+						// Suppression
+						if (nombreEmplois < 0){
+							
+							ArrayList<Integer> refEmploiSupprime = new ArrayList<Integer>();
+							for ( Entry<Integer, Emploi> emploisCDDaccepte : emploisCDD.entrySet() ) {
+								if (emploisCDDaccepte.getValue().getNiveauQualificationNecessaire() == nivQualif)
+									refEmploiSupprime.add(emploisCDDaccepte.getKey());
+							}
+							
+							for (int i = 0; i < (0-nombreEmplois); i++){
+								// Envoyer message Licensier aux Individus
+								ACLMessage informLicensier = new ACLMessage(ACLMessage.INFORM);
+								informLicensier.addReceiver(emplois.get(refEmploiSupprime.get(i)).getEmploye());
+								informLicensier.setContent("Licensier");
+								myAgent.send(informLicensier);
+								
+								// Change infos
+								emploisCDD.remove(refEmploiSupprime.get(i));
+								emploisCDDTempsDepuisAccepte.remove(refEmploiSupprime.get(i));
+								nombreEmploisSelonQualifCDD[nivQualif-1]--;
+								nombreEmploisSelonQualif[nivQualif-1]--;
+							}
+						}
+						// Creation
+						else {
+							for(int i = 0; i < nombreEmplois; i++){
+								//Faire une loi normale ici pour le revenu
+								IntSupplier _revenu = (IntSupplier & Serializable)() 
+										-> UtilRandom.discreteNextGaussian(revenu, revenu/3, 1, revenu*2);
+								//Faire une loi normale ici pour le temps libre
+								IntSupplier _tempsLibre = (IntSupplier & Serializable)() 
+											-> UtilRandom.discreteNextGaussian(tempsLibreMoyen, tempsLibreMoyen/3, 1, tempsLibreMoyen*2);
+										
+								Emploi temp = new Emploi(getAID(), nivQualif, _tempsLibre, _revenu, derniereReferenceEmploi);
+								emplois.put(derniereReferenceEmploi, temp);
+								emploisLibres.add(temp);
+								derniereReferenceEmploi++;
+								
+								addBehaviour( new PublierEmplois());
+							}
+						}
+					}
 				}
 				
 				else if (content.startsWith("Demission:")){
@@ -176,7 +249,11 @@ public class Entreprise extends Agent {
 	private void TraiteReponseEmploi(ACLMessage rempli) {
 		//System.out.println("Reception réponse emploi");
 		String [] content = rempli.getContent().split(":");
-		emploisCDD.get(Integer.parseInt(content[1])).setEmploye(rempli.getSender());
+		emplois.get(Integer.parseInt(content[1])).setEmploye(rempli.getSender());
+		emploisCDD.put(Integer.parseInt(content[1]), emplois.get(Integer.parseInt(content[1])));
+		emploisCDDTempsDepuisAccepte.put(Integer.parseInt(content[1]), k);
+		nombreEmploisSelonQualifCDD[emplois.get(Integer.parseInt(content[1])).getNiveauQualificationNecessaire()-1]++;
+		nombreEmploisSelonQualif[emplois.get(Integer.parseInt(content[1])).getNiveauQualificationNecessaire()-1]++;
 	}
 	
 	/** Appelé quand AttenteMessage obtient un message de démission d'un emploi.
