@@ -28,7 +28,7 @@ public class Entreprise extends Agent {
 	/** Liste des emplois libres à envoyer à PoleEmploi. */
 	private ArrayList<Emploi> emploisLibres;
 	/** < Références distinctes, Emploi > */
-//	private HashMap<Integer, Emploi> emplois;
+	private HashMap<Integer, Emploi> emplois;
 	
 	/** < Références distinctes, Emploi > */
 	private HashMap<Integer, Emploi> emploisCDI;
@@ -54,7 +54,7 @@ public class Entreprise extends Agent {
 	protected void setup() {
 		
 		derniereReferenceEmploi = 0;
-//		emplois = new HashMap<Integer, Emploi>();
+		emplois = new HashMap<Integer, Emploi>();
 		emploisCDI = new HashMap<Integer, Emploi>();
 		emploisCDD = new HashMap<Integer, Emploi>();
 		emploisCDDTempsDepuisAccepte = new HashMap<Integer, Integer>();
@@ -79,9 +79,32 @@ public class Entreprise extends Agent {
 					-> UtilRandom.discreteNextGaussian(demandeMoyen, demandeMoyen/3, 1, demandeMoyen*2);
 			
 			// Optimisation
+			int[] changeNombreEmploye = optimisationDemandeProduction(_demande.getAsInt());
 					
 			// creation emplois
+			for (int nivQualif = 1; nivQualif <= 3; nivQualif++){
+				//Paramètres pour chaque niveau de qualification
+				int nombreEmplois = (int) changeNombreEmploye[nivQualif-1];
+				int revenu = (int) args[3 + nivQualif-1];
+				int tempsLibreMoyen = (int) args[6 + nivQualif-1];
+				
+				for(int i = 0; i < nombreEmplois; i++){
+					//Faire une loi normale ici pour le revenu
+					IntSupplier _revenu = (IntSupplier & Serializable)() 
+							-> UtilRandom.discreteNextGaussian(revenu, revenu/3, 1, revenu*2);
+					//Faire une loi normale ici pour le temps libre
+					IntSupplier _tempsLibre = (IntSupplier & Serializable)() 
+								-> UtilRandom.discreteNextGaussian(tempsLibreMoyen, tempsLibreMoyen/3, 1, tempsLibreMoyen*2);
 					
+					Emploi temp = new Emploi(getAID(), nivQualif, _tempsLibre, _revenu, derniereReferenceEmploi);
+					emplois.put(derniereReferenceEmploi, temp);
+					emploisCDD.put(derniereReferenceEmploi, temp);
+					nombreEmploisSelonQualifCDD[nivQualif-1]++;
+					nombreEmploisSelonQualif[nivQualif-1]++;
+					emploisLibres.add(temp);
+					derniereReferenceEmploi++;
+				}
+			}
 
 			
 			//Ajout des comportements
@@ -178,7 +201,6 @@ public class Entreprise extends Agent {
 		
 		if (production < demande) return ajouterIndividus(demande, production);
 		else return licensierIndividus(demande, production);
-		
 	}
 
 	private int[] licensierIndividus(int demande, int production) {
