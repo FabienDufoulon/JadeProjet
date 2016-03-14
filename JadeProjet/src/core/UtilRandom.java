@@ -1,24 +1,10 @@
 package core;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
-
-import jade.core.AID;
-import jade.core.Agent;
-import jade.domain.DFService;
-import jade.domain.FIPAException;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.SearchConstraints;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
-import jade.lang.acl.ACLMessage;
 
 /**
  * 
- * Heavily inspired by jade tutorial and 
- * http://www.iro.umontreal.ca/~vaucher/Agents/Jade/primer5.html
- * for improved register method and get services methods.
+ * Util for simulating gaussian float distribution and obtaining integers
  */
 public class UtilRandom {
 	static Random rand = new Random(); 

@@ -83,13 +83,12 @@ public class Horloge extends Agent {
 						turn = 0;
 						//Tuer le bon nombre d'individus, en envoyant un message "Retraite"
 						AID[] agentsRetraite = Util.getMultipleRandomIndividu(myAgent, nombreSortants);
-						//System.out.println(agentsRetraite[0]);
+
 						for (int i = 0; i < agentsRetraite.length; i++){
 							ACLMessage informRetraite = new ACLMessage(ACLMessage.INFORM);
 							informRetraite.addReceiver(agentsRetraite[i]);
 							informRetraite.setContent("Retraite");
 							myAgent.send(informRetraite);
-							//System.out.println("Retraite");
 							
 							//Ne pas envoyer le message "tour" à un agent qui part à la retraite
 							inform.removeReceiver(agentsRetraite[i]);

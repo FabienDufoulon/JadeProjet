@@ -65,6 +65,9 @@ public class Entreprise extends Agent {
 		nombreEmploisSelonQualif = new int[]{0,0,0};
 		nombreEmploisSelonQualifCDI = new int[]{0,0,0};
 		nombreEmploisSelonQualifCDD = new int[]{0,0,0};
+		prodParQualif = new int[]{0,0,0};
+		revenuParQualif = new int[]{0,0,0};
+		tempsLibreMoyenParQualif = new int[]{0,0,0};
 	   	
 		//Crée les emplois selon les argument donnés.
 		Object[] args = getArguments();

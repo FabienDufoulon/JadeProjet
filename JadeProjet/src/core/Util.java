@@ -128,7 +128,7 @@ public class Util {
             int randomStartIndex = rand.nextInt(allIndividus.length-nombre);
             for (int i = 0; i < nombre; i++) agents[i] = allIndividus[randomStartIndex+i];
         }
-        else if(allIndividus.length == nombre){
+        else if(allIndividus.length <= nombre){
         	return allIndividus;
         }
         return agents;
