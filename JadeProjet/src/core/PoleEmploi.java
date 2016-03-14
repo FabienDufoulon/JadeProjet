@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map.Entry;
 
 import jade.core.AID;
 
@@ -36,6 +37,9 @@ public class PoleEmploi extends Agent {
 	 *  La référence emploi est le nom local de l'employeur correspondant, à
 	 *  laquelle on concatène la référence de l'emploi.*/
 	private HashMap<String, Emploi> referencesEmplois;
+	
+	/** Permet d'obtenir la durée d'offre d'emploi */
+	private HashMap<Emploi, Integer> dureeOffreEmplois;
 	
 	
 	//Stat
@@ -83,6 +87,7 @@ public class PoleEmploi extends Agent {
 		emploisEnvoyes = new HashMap<AID, Emploi>();
 		
 		referencesEmplois = new HashMap<String, Emploi>();
+		dureeOffreEmplois = new HashMap<Emploi, Integer>();
 		
 		//Stat
 		niveauQualificationsIndividus = new HashMap<AID, Integer>();
@@ -135,21 +140,23 @@ public class PoleEmploi extends Agent {
 					}
 				}
 				
-				/*if (msg.getConversationId() != null && msg.getConversationId().startsWith("PublierEmploisEntreprise:")){
+				else if (msg.getConversationId() != null && msg.getConversationId().startsWith("PublierEmploisEntreprise:")){
 					try {
 						Emploi emp = (Emploi)msg.getContentObject();
 						statutEmplois.put(emp, StatutEmploi.Disponible);
 						
 						String refEmploi = msg.getSender().getLocalName()+emp.getRefEmploi();
 						referencesEmplois.put(refEmploi, emp);
+						
+						String[] split = msg.getContent().split(":");
+						dureeOffreEmplois.put(emp, Integer.parseInt(split[1]));
+						
 						proposerEmploi(refEmploi);
 						
-						//HashMap<Emploi, Integer> 
-
 					} catch (UnreadableException e) {
 						e.printStackTrace();
 					}
-				}*/
+				}
 				
 				else {
 					String content = msg.getContent();
@@ -160,6 +167,9 @@ public class PoleEmploi extends Agent {
 						demissionParTour.clear();
 						refusParTour.clear();
 						
+						for ( Entry<Emploi, Integer> dureeOffre : dureeOffreEmplois.entrySet() ) {
+							dureeOffre.setValue(dureeOffre.getValue()-1);
+						}
 						
 						if (toursOut >= toursOutLim){
 							toursOut = 0;
@@ -205,15 +215,20 @@ public class PoleEmploi extends Agent {
 						AID senderAID = msg.getSender();
 						Emploi emploiRepropose = emploisEnvoyes.get(senderAID);
 						emploisEnvoyes.remove(senderAID);
-						statutEmplois.put(emploiRepropose, StatutEmploi.Disponible);
 						
 						//Statistique
 						refusParTour.put(senderAID, refusParTour.containsKey(senderAID) ? refusParTour.get(senderAID)+1 : 1);
 						//
 						
 						String refEmploi = emploiRepropose.getEmployeur().getLocalName()+emploiRepropose.getRefEmploi();
-						proposerEmploi(refEmploi);
-						
+						if ( dureeOffreEmplois.containsKey(emploiRepropose) && dureeOffreEmplois.get(emploiRepropose) <= 0 ) {			
+							referencesEmplois.remove(refEmploi);
+							statutEmplois.remove(emploiRepropose);
+						}
+						else {
+							statutEmplois.put(emploiRepropose, StatutEmploi.Disponible);
+							proposerEmploi(refEmploi);
+						}
 					}
 					else if (content.equals("Retraite")){
 						//System.out.println("S " + statutIndividus.size());
