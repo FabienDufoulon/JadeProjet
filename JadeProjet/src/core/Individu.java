@@ -114,13 +114,15 @@ public class Individu extends Agent {
 	private void retire(){
 		//System.out.println("Retire");
 		//Demission de l'emploi.
-		AID employeur = emploiCourant.getEmployeur();
-		
-		//Créer message Demission pour Employeur et PoleEmploi
-		ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
-		inform.addReceiver(employeur);
-		inform.setContent("Demission:" + emploiCourant.getRefEmploi());
-		send(inform);
+		if (emploiCourant != null){
+			AID employeur = emploiCourant.getEmployeur();
+			
+			//Créer message Demission pour Employeur et PoleEmploi
+			ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+			inform.addReceiver(employeur);
+			inform.setContent("Demission:" + emploiCourant.getRefEmploi());
+			send(inform);
+		}
 		
 		//Envoyer message retraite à Pole Emploi
 		ACLMessage informRetraite = new ACLMessage(ACLMessage.INFORM);

@@ -69,8 +69,8 @@ public class Simulateur {
 	public Simulateur(){
 		//Paramètres simulateur
 		individusDebut = 50;
-		individusEntrants = 2;
-		individusSortants = 1;
+		individusEntrants = 1;
+		individusSortants = 8;
 		entreprisesDebut = 10;
 		tempsTour = 250;
 		parametresHorloge = new Object[8];

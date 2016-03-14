@@ -250,11 +250,13 @@ public class PoleEmploi extends Agent {
 		//System.out.println("ProposeEmploi");
 		Emploi emploi = referencesEmplois.get(refEmploi);
 		
+		//Pour éviter des erreurs nullpointeur 
+		if (emploi == null) return;
+		
 		//Créer message
 		ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
 		inform.setConversationId("ProposeEmploi");
 		AID individuDestine = null;
-		
 		individuDestine = Util.getRandomService(this, "nivQualif"+emploi.getNiveauQualificationNecessaire());
 		if (!emploisEnvoyes.containsKey(individuDestine) && individuDestine != null){
 			inform.addReceiver(individuDestine);
