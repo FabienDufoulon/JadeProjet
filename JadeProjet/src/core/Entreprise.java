@@ -28,7 +28,7 @@ public class Entreprise extends Agent {
 	/** Liste des emplois libres à envoyer à PoleEmploi. */
 	private ArrayList<Emploi> emploisLibres;
 	/** < Références distinctes, Emploi > */
-//	private HashMap<Integer, Emploi> emplois;
+	private HashMap<Integer, Emploi> emplois;
 	
 	/** < Références distinctes, Emploi > */
 	private HashMap<Integer, Emploi> emploisCDI;
@@ -54,7 +54,7 @@ public class Entreprise extends Agent {
 	protected void setup() {
 		
 		derniereReferenceEmploi = 0;
-//		emplois = new HashMap<Integer, Emploi>();
+		emplois = new HashMap<Integer, Emploi>();
 		emploisCDI = new HashMap<Integer, Emploi>();
 		emploisCDD = new HashMap<Integer, Emploi>();
 		emploisCDDTempsDepuisAccepte = new HashMap<Integer, Integer>();
@@ -79,9 +79,32 @@ public class Entreprise extends Agent {
 					-> UtilRandom.discreteNextGaussian(demandeMoyen, demandeMoyen/3, 1, demandeMoyen*2);
 			
 			// Optimisation
+			int[] changeNombreEmploye = optimisationDemandeProduction(_demande.getAsInt());
 					
 			// creation emplois
+			for (int nivQualif = 1; nivQualif <= 3; nivQualif++){
+				//Paramètres pour chaque niveau de qualification
+				int nombreEmplois = (int) changeNombreEmploye[nivQualif-1];
+				int revenu = (int) args[3 + nivQualif-1];
+				int tempsLibreMoyen = (int) args[6 + nivQualif-1];
+				
+				for(int i = 0; i < nombreEmplois; i++){
+					//Faire une loi normale ici pour le revenu
+					IntSupplier _revenu = (IntSupplier & Serializable)() 
+							-> UtilRandom.discreteNextGaussian(revenu, revenu/3, 1, revenu*2);
+					//Faire une loi normale ici pour le temps libre
+					IntSupplier _tempsLibre = (IntSupplier & Serializable)() 
+								-> UtilRandom.discreteNextGaussian(tempsLibreMoyen, tempsLibreMoyen/3, 1, tempsLibreMoyen*2);
 					
+					Emploi temp = new Emploi(getAID(), nivQualif, _tempsLibre, _revenu, derniereReferenceEmploi);
+					emplois.put(derniereReferenceEmploi, temp);
+					emploisCDD.put(derniereReferenceEmploi, temp);
+					nombreEmploisSelonQualifCDD[nivQualif-1]++;
+					nombreEmploisSelonQualif[nivQualif-1]++;
+					emploisLibres.add(temp);
+					derniereReferenceEmploi++;
+				}
+			}
 
 			
 			//Ajout des comportements
@@ -170,67 +193,65 @@ public class Entreprise extends Agent {
 		addBehaviour( new PublierEmplois());
 	}*/
 	
-	/*
-	private int[] optimisationDemandeProduction(int[] nombreEmploisSelonQualifCDD, int[] nombreEmploisSelonQualifCDI, demande) {
-		int production = prod1*nombreEmploisSelonQualif[0] + prod2*nombreEmploisSelonQualif[1] + prod3*nombreEmploisSelonQualif[2];
+	
+	private int[] optimisationDemandeProduction(int demande) {
+		int production = prodParQualif[0]*nombreEmploisSelonQualif[0] 
+				       + prodParQualif[1]*nombreEmploisSelonQualif[1] 
+				       + prodParQualif[2]*nombreEmploisSelonQualif[2];
 		
-		int[] nombreEmploisSelonQualif;
-		
-		if (production < demande) ajouterIndividus(nombreEmploisSelonQualif)
-		else licensierIndividus(nombreEmploisSelonQualifCDD, nombreEmploisSelonQualifCDI)
-		
+		if (production < demande) return ajouterIndividus(demande, production);
+		else return licensierIndividus(demande, production);
 	}
 
-	private int[] licensierIndividus(int[] nombreEmploisSelonQualifCDD,int[] nombreEmploisSelonQualifCDI, demande, production) {
-		nombre1CDD = nombreEmploisSelonQualifCDD[0];
-		nombre2CDD = nombreEmploisSelonQualifCDD[1];
-		nombre3CDD = nombreEmploisSelonQualifCDD[2];
-		nombre1CDI = nombreEmploisSelonQualifCDI[0];
-		nombre2CDI = nombreEmploisSelonQualifCDI[1];
-		nombre3CDI = nombreEmploisSelonQualifCDI[2];
+	private int[] licensierIndividus(int demande, int production) {
+		int nombre1CDD = nombreEmploisSelonQualifCDD[0];
+		int nombre2CDD = nombreEmploisSelonQualifCDD[1];
+		int nombre3CDD = nombreEmploisSelonQualifCDD[2];
 		
-		nombre1 = nombre1CDD+nombre1CDI;
-		nombre2 = nombre2CDD+nombre2CDI;
-		nombre3 = nombre3CDD+nombre3CDI;
+		int nombre1 = nombreEmploisSelonQualif[0];
+		int nombre2 = nombreEmploisSelonQualif[1];
+		int nombre3 = nombreEmploisSelonQualif[2];
 		
 		while (production > demande){
-			if (production - demande > prod3 && nombre3CDD > 0){
+			if (production - demande > prodParQualif[2] && nombre3CDD > 0){
 				nombre3CDD--;
+				nombre3--;
 			}
-			else if (production - demande > prod2){
+			else if (production - demande > prodParQualif[1]){
 				if (nombre2 > nombre3*seuil2 && nombre2CDD > 0){
 					nombre2CDD--;
+					nombre2--;
 				}
 				else if (nombre1 > nombre2*seuil1 && nombre1CDD > 0) {
 					nombre1CDD--;
+					nombre1--;
 				}
 				else break;
 			}
-			else if (production - demande > prod1){
+			else if (production - demande > prodParQualif[0]){
 				if (nombre1 > nombre2*seuil1 && nombre1CDD > 0) {
 					nombre1CDD--;
+					nombre1--;
 				}
 			}
 			else{
 				break;
 			}
 
-			nombre1 = nombre1CDD+nombre1CDI;
-			nombre2 = nombre2CDD+nombre2CDI;
-			nombre3 = nombre3CDD+nombre3CDI;
-			production = prod1*nombre1 + prod2*nombre2 + prod3*nombre3;
+			production = prodParQualif[0]*nombre1 + prodParQualif[1]*nombre2 + prodParQualif[2]*nombre3;
 		}
 		
-		return int[]{nombreEmploisSelonQualifCDD[0]-nombre1CDD, nombreEmploisSelonQualifCDD[1]-nombre2CDD, nombreEmploisSelonQualifCDD[2]-nombre3CDD}}
+		return new int[]{nombre1CDD-nombreEmploisSelonQualifCDD[0], nombre2CDD-nombreEmploisSelonQualifCDD[1], nombre3CDD-nombreEmploisSelonQualifCDD[2]};
+	}
 
 
-	private int[] ajouterIndividus(int[] nombreEmploisSelonQualif, demande, production) {
+	private int[] ajouterIndividus(int demande, int production) {
 
-		nombre1 = nombreEmploisSelonQualif[0];
-		nombre2 = nombreEmploisSelonQualif[1];
-		nombre3 = nombreEmploisSelonQualif[2];
+		int nombre1 = nombreEmploisSelonQualif[0];
+		int nombre2 = nombreEmploisSelonQualif[1];
+		int nombre3 = nombreEmploisSelonQualif[2];
 		while (production < demande){
-			if (demande - production > prod2){
+			if (demande - production > prodParQualif[1]){
 				if ((nombre3+1)*seuil2 <= nombre2) {
 					nombre3++;
 				}
@@ -241,7 +262,7 @@ public class Entreprise extends Agent {
 					nombre1++;
 				}
 			}
-			else if (demande - production > prod1){
+			else if (demande - production > prodParQualif[0]){
 				if ((nombre2+1)*seuil1 <= nombre1) {
 					nombre2++;
 				}
@@ -253,7 +274,9 @@ public class Entreprise extends Agent {
 				nombre1++;
 			}
 
-			production = prod1*nombre1 + prod2*nombre2 + prod3*nombre3;
+			production = prodParQualif[0]*nombre1 + prodParQualif[1]*nombre2 + prodParQualif[2]*nombre3;
 		}
-	}*/
+		
+		return new int[]{nombre1-nombreEmploisSelonQualif[0], nombre2-nombreEmploisSelonQualif[1], nombre3-nombreEmploisSelonQualif[2]};
+	}
 }
