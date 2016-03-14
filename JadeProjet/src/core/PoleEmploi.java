@@ -148,7 +148,7 @@ public class PoleEmploi extends Agent {
 						String refEmploi = msg.getSender().getLocalName()+emp.getRefEmploi();
 						referencesEmplois.put(refEmploi, emp);
 						
-						String[] split = msg.getContent().split(":");
+						String[] split = msg.getConversationId().split(":");
 						dureeOffreEmplois.put(emp, Integer.parseInt(split[1]));
 						
 						proposerEmploi(refEmploi);
