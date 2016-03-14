@@ -137,7 +137,7 @@ public class Individu extends Agent {
 	/** Fonction pour faire tous les détails liés à la démission. */
 	private void faireDemission(){
 		if (emploiCourant != null){
-			System.out.println("Demission");
+			//System.out.println("Demission");
 			AID employeur = emploiCourant.getEmployeur();
 			
 			//Créer message Demission pour Employeur et PoleEmploi

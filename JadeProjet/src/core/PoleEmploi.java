@@ -177,16 +177,31 @@ public class PoleEmploi extends Agent {
 						//System.out.println("PoleEmploi starting turn");
 					}
 					else if (content.startsWith("EmploiAccepte")){
-						statutIndividus.put(msg.getSender(), StatutEmploye.Employe);
-		
 						AID senderAID = msg.getSender();
-						Emploi emploiAccepte = emploisEnvoyes.get(senderAID);
-						AID employeurAID = emploiAccepte.getEmployeur(); 
-						String refEmploi = employeurAID.getLocalName()+emploiAccepte.getRefEmploi();
 						
-						referencesEmplois.remove(refEmploi);
-						statutEmplois.remove(emploiAccepte);
-						emploisEnvoyes.remove(senderAID);
+						if (statutIndividus.containsKey(senderAID)) {
+							//Si le message arrive avant que l'individu parte à la retraite
+							statutIndividus.put(senderAID, StatutEmploye.Employe);
+							Emploi emploiAccepte = emploisEnvoyes.get(senderAID);
+							AID employeurAID = emploiAccepte.getEmployeur(); 
+							String refEmploi = employeurAID.getLocalName()+emploiAccepte.getRefEmploi();
+							
+							referencesEmplois.remove(refEmploi);
+							statutEmplois.remove(emploiAccepte);
+							emploisEnvoyes.remove(senderAID);
+						}
+						else{
+							//Faire comme s'il avait refusé l'emploi
+							Emploi emploiRepropose = emploisEnvoyes.get(senderAID);
+							emploisEnvoyes.remove(senderAID);
+							statutEmplois.put(emploiRepropose, StatutEmploi.Disponible);
+							
+							//Pas ajouter aux stats?
+							
+							String refEmploi = emploiRepropose.getEmployeur().getLocalName()+emploiRepropose.getRefEmploi();
+							proposerEmploi(refEmploi);
+						}
+
 					}
 					else if (content.startsWith("Inscription")){
 						statutIndividus.put(msg.getSender(), StatutEmploye.Chomage);
@@ -196,10 +211,14 @@ public class PoleEmploi extends Agent {
 					}
 					else if (content.startsWith("Demission")){
 						AID senderAID = msg.getSender();
-						statutIndividus.put(senderAID, StatutEmploye.Chomage);
 						
-						//Statistique
-						demissionParTour.put(senderAID, demissionParTour.containsKey(senderAID) ? demissionParTour.get(senderAID)+1 : 1);
+						//Si l'individu n'a pas pris la retraite entre temps
+						if (statutIndividus.containsKey(senderAID)){
+							statutIndividus.put(senderAID, StatutEmploye.Chomage);
+						
+							//Statistique
+							demissionParTour.put(senderAID, demissionParTour.containsKey(senderAID) ? demissionParTour.get(senderAID)+1 : 1);
+						}
 					}
 					else if (content.equals("EmploiRefuse")){
 						AID senderAID = msg.getSender();
@@ -216,14 +235,12 @@ public class PoleEmploi extends Agent {
 						
 					}
 					else if (content.equals("Retraite")){
-						//System.out.println("S " + statutIndividus.size());
 						statutIndividus.remove(msg.getSender());
 						niveauQualificationsIndividus.remove(msg.getSender());
 						tempsLibreMinIndividu.remove(msg.getSender());
 						revenuMinIndividu.remove(msg.getSender());
 						tempsLibreMoyenIndividu.remove(msg.getSender());
 						revenuMoyenIndividu.remove(msg.getSender());
-						//System.out.println("E " + statutIndividus.size());
 					}
 					else if (content.startsWith("InformationTour")){
 						String[] split = msg.getContent().split(":");
