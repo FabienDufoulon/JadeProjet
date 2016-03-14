@@ -202,6 +202,34 @@ public class Individu extends Agent {
 						send(inform);
 					}
 					
+					else if (content.equals("Licensier")){
+						if (emploiCourant != null){
+							//System.out.println("Licensier");
+							AID employeur = emploiCourant.getEmployeur();
+							
+							//Créer message Demission pour PoleEmploi
+							ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+							inform.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
+							inform.setContent("Demission:" + emploiCourant.getRefEmploi());
+							send(inform);
+							
+							//Changer ses infos
+							emploiCourant = null;
+							statut = StatutIndividu.Chomage;
+							
+							//Deregister from DF
+							try { DFService.deregister(myAgent); }
+					        catch (Exception e) {System.out.println("Exception démission");}
+							
+							//DF : enregistrer avec le niveau de qualification
+							ServiceDescription sd  = new ServiceDescription();
+					        sd.setType( "nivQualif" + nivQualif );
+					        sd.setName( getLocalName() );
+					        Util.register( myAgent,sd );
+							
+						}
+					}
+					
 					//L'individu part à la retraite
 					else if (content.equals("Retraite")){
 						//Gerer deregister registre mais aussi demission de emploi.
