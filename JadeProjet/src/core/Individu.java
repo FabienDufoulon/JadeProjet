@@ -38,6 +38,8 @@ public class Individu extends Agent {
 	private int tempsLibreMin;
 	/** Revenu minimum personnel */
 	private int revenuMin;
+	/** Alocation chomage */
+	int allocationChomage;
 	
 	/** Compte le nombre d'offres consécutives en dessous du revenu minimum personnel*/
 	int compteOffresConsecutives;
@@ -68,6 +70,7 @@ public class Individu extends Agent {
 			nivQualif = (int) args[3];
 			tempsLibreMin = (int) args[4];
 			revenuMin = (int) args[5];
+			allocationChomage = (int) args[6];
 			
 			//Register Service : service depends on niveauQualif
 			ServiceDescription sd  = new ServiceDescription();
@@ -194,6 +197,13 @@ public class Individu extends Agent {
 						if (statut == StatutIndividu.Employe){
 							addBehaviour(new VieEmploye());
 						}
+						else{
+							//Envoyer message temps libre tour, revenu tour : informationEmploye
+							ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+							inform.addReceiver(new AID("PoleEmploi", AID.ISLOCALNAME));
+							inform.setContent("InformationChomage:"+allocationChomage);
+							send(inform);
+						}
 						
 						//Envoyer message temps libre min, revenu min : informationTour
 						ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
@@ -257,7 +267,8 @@ public class Individu extends Agent {
 		
 		if (content != null){
 			//Si le revenu n'est pas suffisant.
-			if (revenuMin > content.getRevenu()){
+			int revenu = content.getRevenu();
+			if (revenuMin > revenu || revenu < allocationChomage){
 				if (compteOffresConsecutives > y){
 					compteOffresConsecutives = 0;
 					if (revenuMin - z < 0 ) revenuMin = 0;

@@ -44,6 +44,7 @@ public class StatistiquesGui extends JFrame{
 	private XYSeries proportionNiv3Series = new XYSeries("proportionNiv3");
 	
 	private XYSeries revenuMinMoyenSeries = new XYSeries("Revenu Min Moyen");
+	private XYSeries revenuMoyenSeries = new XYSeries("Revenu Moyen");
 	
 	JFreeChart tauxLineChart;
 	JFreeChart revenuLineChart;
@@ -133,8 +134,9 @@ public class StatistiquesGui extends JFrame{
 		
 		// Graphe Revenu Min Moyen
 		revenuDataset.addSeries(revenuMinMoyenSeries);
+		revenuDataset.addSeries(revenuMoyenSeries);
 		revenuLineChart = ChartFactory.createXYLineChart(
-				"Revenu Min Moyen dans le système",
+				"Revenu Min Moyen et Revenu Moyen dans le système",
 				"Mois","Taux",
 				revenuDataset,
 				PlotOrientation.VERTICAL,
@@ -205,6 +207,7 @@ public class StatistiquesGui extends JFrame{
 				tauxDataset.getSeries(i).clear();
 			}
 			revenuMinMoyenSeries.clear();
+			revenuMoyenSeries.clear();
 		}
 		else {
 			tauxChomageSeries.add(toursOut, tauxChomage);
@@ -213,6 +216,7 @@ public class StatistiquesGui extends JFrame{
 			proportionNiv3Series.add(toursOut, (double) individusQualif3/individus);
 			
 			revenuMinMoyenSeries.add(toursOut, revenuMinMoyen);
+			revenuMoyenSeries.add(toursOut, revenuMoyenMoyen);
 		}
 	}
 }

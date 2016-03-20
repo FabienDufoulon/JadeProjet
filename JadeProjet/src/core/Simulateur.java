@@ -39,6 +39,8 @@ public class Simulateur {
 	private int z;
 	/** Niveau de qualification moyen des individus */
 	private int niveauQualif;
+	/** Allocations chomage des individus */
+	int allocationsChomage;
 	Object[] parametresIndividu;
 	
 	//Paramètres Etat
@@ -68,10 +70,10 @@ public class Simulateur {
 	
 	public Simulateur(){
 		//Paramètres simulateur
-		individusDebut = 50;
+		individusDebut = 100;
 		individusEntrants = 0;
-		individusSortants = 3;
-		entreprisesDebut = 10;
+		individusSortants = 0;
+		entreprisesDebut = 3;
 		tempsTour = 250;
 		parametresHorloge = new Object[8];
 		parametresHorloge[0] = tempsTour;
@@ -81,23 +83,25 @@ public class Simulateur {
 		
 		//Individus
 		tempsLibreMoyen = 100;
-		revenuMoyen = 2000;
+		revenuMoyen = 1800;
 		x = 3;
 		y = 3;
-		z = 100;
+		z = 50;
 		niveauQualif = 2;
+		allocationsChomage = 1700;
 		
-		parametresIndividu = new Object[6];
+		parametresIndividu = new Object[7];
 		parametresIndividu[0] = x;
 		parametresIndividu[1] = y;
 		parametresIndividu[2] = z;
+		parametresIndividu[6] = allocationsChomage;
 		/*parametresIndividu[3] = niveauQualif;
 		parametresIndividu[4] = tempsLibreMoyen;
 		parametresIndividu[5] = revenuMoyen;*/
 		
 		
 		//Etat
-		emploisParQualif = new int[]{50,50,50};
+		emploisParQualif = new int[]{20,20,20};
 		revenusParQualif = new int[]{1800,2000,2200};
 		tempsLibreParQualif = new int[]{110,100,90};
 		
@@ -109,10 +113,10 @@ public class Simulateur {
 		}
 		
 		//Entreprise
-		demandeMoyen = 80;
+		demandeMoyen = 50;
 		productionIndividuParQualif = new int[]{1,2,3};
-		seuilNiv1EmploisRequis = 10;
-		seuilNiv2EmploisRequis = 5;
+		seuilNiv1EmploisRequis = 2;
+		seuilNiv2EmploisRequis = 2;
 		k = 12;
 		dureeOffreEmploi = 5;
 		
@@ -137,7 +141,7 @@ public class Simulateur {
 		rt.setCloseVM(true);
 		
 		/*Lancement de la plate-forme*/
-		Profile pMain = new ProfileImpl("localhost", 8888, null);
+		Profile pMain = new ProfileImpl("localhost", 8898, null);
 		// La taille des search du DF étant limité à 100 sinon
 		String property_dx_maxresult = "10000";
 		pMain.setParameter("jade_domain_df_maxresult", property_dx_maxresult); 
@@ -154,9 +158,23 @@ public class Simulateur {
 		
 		mc.createNewAgent("Etat", Etat.class.getName(), parametresEtat).start();
 		
-		/* Lancement des agents */
+		/* Lancement des agents avec loi normale*/
+		/*
 		for (int i = 1; i <= individusDebut; i++){	
 			parametresIndividu[3] = _nivQualif.getAsInt();
+			parametresIndividu[4] = _tempsLibre.getAsInt();
+			parametresIndividu[5] = _revenu.getAsInt();
+			
+			mc.createNewAgent("Individu" + i, Individu.class.getName(), parametresIndividu).start();
+		}*/
+
+		/* Lancement des agents par nombre individus*/
+		int[] nombreIndividusParNiveau = new int[]{50,30,20};
+		for (int i = 1; i <= individusDebut; i++){	
+			if (i <= nombreIndividusParNiveau[0]+1) parametresIndividu[3] = 1;
+			else if(i <= nombreIndividusParNiveau[1]+nombreIndividusParNiveau[0]+1) parametresIndividu[3] = 2;
+			else parametresIndividu[3] = 3;
+			
 			parametresIndividu[4] = _tempsLibre.getAsInt();
 			parametresIndividu[5] = _revenu.getAsInt();
 			

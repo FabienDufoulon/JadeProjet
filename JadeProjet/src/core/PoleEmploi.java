@@ -70,7 +70,7 @@ public class PoleEmploi extends Agent {
 	ArrayList<Double> proportionNiv2Temps;
 	ArrayList<Double> proportionNiv3Temps;
 	ArrayList<Double> revenuMinMoyenTemps;
-	int toursOutLim = 100;
+	int toursOutLim = 200;
 	int toursOut = 0;
 
 	
@@ -266,6 +266,10 @@ public class PoleEmploi extends Agent {
 						String[] split = msg.getContent().split(":");
 						tempsLibreMoyenIndividu.put(msg.getSender(), Integer.parseInt(split[1]));
 						revenuMoyenIndividu.put(msg.getSender(), Integer.parseInt(split[2]));
+					}
+					else if (content.startsWith("InformationChomage")){
+						String[] split = msg.getContent().split(":");
+						revenuMoyenIndividu.put(msg.getSender(), Integer.parseInt(split[1]));
 					}
 				}
 				
